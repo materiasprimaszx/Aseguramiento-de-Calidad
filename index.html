@@ -1,0 +1,1853 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Portal de Calidad · Zubex</title>
+<link rel="icon" href="favicon.png">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --zb:#0d18a8;      /* azul Zubex, tomado del logotipo */
+  --zbd:#080f70;     /* azul oscuro para estados activos */
+  --zb2:#2a3ad4;     /* azul medio para acentos y gráficas */
+  --zbl:#e9ebf8;     /* lavanda de fondo */
+  --bg:#f5f6fa;--wh:#fff;--tx:#14142b;--tx2:#5f6079;--bd:#e2e3ee;
+  --ok:#1a9e3f;--wn:#e6820a;--dg:#cc2222;--dmg:#8b00b5;--side:240px}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}
+
+/* ---------- acceso ---------- */
+.login{position:fixed;inset:0;background:var(--bg);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{background:var(--wh);border:1px solid var(--bd);border-radius:18px;padding:2.4rem 2.2rem;width:100%;max-width:410px;
+  box-shadow:0 20px 60px rgba(13,24,168,.12)}
+.login-card .marca{display:block;height:46px;margin:0 auto 1.1rem}
+.login-card p.sub{font-size:.74rem;color:var(--tx2);text-align:center;letter-spacing:2px;text-transform:uppercase;margin-bottom:1.7rem}
+.login-err{background:#ffeaea;color:#aa1111;border-radius:8px;padding:9px 12px;font-size:.8rem;margin-bottom:1rem;display:none}
+.login-card .fgr{margin-bottom:.9rem}.login-card .btn{width:100%;justify-content:center;padding:11px}
+.login-foot{margin-top:1.3rem;font-size:.73rem;color:var(--tx2);text-align:center;line-height:1.55}
+
+/* ---------- menú lateral ---------- */
+.side{position:fixed;top:0;left:0;bottom:0;width:var(--side);background:var(--wh);border-right:1px solid var(--bd);
+  display:flex;flex-direction:column;z-index:60;transition:transform .2s}
+.side-top{padding:20px 18px 16px;border-bottom:1px solid var(--bd)}
+.side-top .marca{display:block;height:30px}
+.side-top p{font-size:.6rem;color:var(--tx2);letter-spacing:2.2px;text-transform:uppercase;margin-top:7px;padding-left:2px}
+.side-nav{padding:12px 10px;display:flex;flex-direction:column;gap:3px;overflow-y:auto;flex:1}
+.side-nav::-webkit-scrollbar{width:6px}.side-nav::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
+.side-lbl{font-size:.62rem;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:1px;padding:15px 10px 6px}
+.grupo-lbl{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:15px 10px 6px;
+  font-size:.62rem;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:1px}
+.mini-sw{display:flex;align-items:center;gap:4px;font-size:.57rem;letter-spacing:.2px;cursor:pointer;text-transform:none;font-weight:600;color:var(--tx2)}
+.mini-sw input{width:12px;height:12px;margin:0;cursor:pointer}
+.nt{display:flex;align-items:center;gap:11px;padding:10px 12px;border:0;background:none;cursor:pointer;font:inherit;
+  font-size:.86rem;font-weight:600;color:var(--tx2);border-radius:9px;text-align:left;width:100%;border-left:3px solid transparent;transition:.15s}
+.nt .ic{font-size:1rem;width:19px;text-align:center;flex:none}
+.nt:hover{background:var(--bg);color:var(--tx)}
+.nt.active{background:var(--zbl);color:var(--zb);border-left-color:var(--zb)}
+.nt .cnt{margin-left:auto;font-size:.67rem;font-weight:700;background:var(--dg);color:#fff;border-radius:20px;padding:1px 7px;min-width:19px;text-align:center}
+.nt .cnt.amb{background:var(--wn)}.nt .cnt.cero{display:none}
+.mod-nt{font-size:.82rem;padding:8px 10px;gap:8px}
+.mod-nt .ic{font-size:.92rem;width:17px}
+.mod-nt.apagado{color:#a3a4bb}.mod-nt.apagado .ic{opacity:.5}
+.pt{width:6px;height:6px;border-radius:50%;flex:none;margin-right:-3px}
+.pt.activo{background:var(--ok)}.pt.obra{background:var(--wn)}.pt.plan{background:#ccccdd}
+.nt.agregar{color:var(--zb);font-size:.79rem;padding:8px 10px;border:1px dashed var(--bd);margin-top:5px;justify-content:center;gap:6px}
+.nt.agregar:hover{border-color:var(--zb);background:var(--zbl)}.nt.agregar .ic{width:auto}
+.side-foot{padding:12px 16px;border-top:1px solid var(--bd);font-size:.7rem;color:var(--tx2)}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:#ccc;display:inline-block;margin-right:6px}
+.sync-dot.ok{background:var(--ok)}.sync-dot.err{background:var(--dg)}
+.sync-dot.loading{background:var(--wn);animation:pulse .8s infinite alternate}
+@keyframes pulse{0%{opacity:.4}100%{opacity:1}}
+.rol-chip{display:inline-block;font-size:.62rem;font-weight:700;padding:1px 7px;border-radius:20px;background:var(--zbl);color:var(--zb);letter-spacing:.3px}
+.burger{display:none;position:fixed;top:12px;left:12px;z-index:70;background:var(--wh);border:1px solid var(--bd);border-radius:9px;width:40px;height:40px;font-size:1.1rem;cursor:pointer}
+.scrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:55}
+
+/* ---------- principal ---------- */
+.main{margin-left:var(--side);position:relative;z-index:1;min-height:100vh}
+.topbar{background:var(--wh);border-bottom:1px solid var(--bd);padding:0 26px;height:62px;display:flex;align-items:center;
+  justify-content:space-between;position:sticky;top:0;z-index:40;gap:16px}
+.topbar h2{font-size:1rem;font-weight:700}.topbar .crumb{font-size:.73rem;color:var(--tx2);margin-top:1px}
+.dbadge{background:var(--zb);color:#fff;padding:5px 15px;border-radius:20px;font-size:.69rem;font-weight:700;letter-spacing:1.2px;white-space:nowrap}
+.wrap{padding:24px 26px 70px;max-width:1300px}
+.section{display:none}.section.active{display:block}
+.section-title{font-size:.77rem;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:1px;margin:1.7rem 0 .8rem;
+  display:flex;align-items:center;gap:12px}
+.section-title:first-child{margin-top:0}
+.section-title .linea{flex:1;height:1px;background:var(--bd)}
+
+/* ---------- franja de atención ---------- */
+.atencion{background:var(--wh);border:1px solid var(--bd);border-left:4px solid var(--dg);border-radius:12px;
+  padding:1rem 1.2rem;margin-bottom:1.5rem}
+.atencion.limpia{border-left-color:var(--ok)}
+.atencion h4{font-size:.88rem;font-weight:700;margin-bottom:.1rem;display:flex;align-items:center;gap:8px}
+.atencion .sub{font-size:.75rem;color:var(--tx2);margin-bottom:.9rem}
+.aten-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:.6rem}
+.aten-item{display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:9px;padding:.65rem .8rem;cursor:pointer;
+  border:1px solid transparent;transition:.15s}
+.aten-item:hover{border-color:var(--zb);background:var(--zbl)}
+.aten-item .n{font-size:1.25rem;font-weight:700;line-height:1;flex:none}
+.aten-item .n.rojo{color:var(--dg)}.aten-item .n.ambar{color:var(--wn)}
+.aten-item .t{font-size:.76rem;line-height:1.35}
+.aten-item .t small{display:block;color:var(--tx2);font-size:.7rem}
+
+/* ---------- indicadores ---------- */
+.dg{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.6rem}
+.dc{background:var(--wh);border:1px solid var(--bd);border-radius:12px;padding:1.05rem;display:flex;align-items:center;gap:12px}
+.dc .ic{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex:none}
+.dc .inf p{font-size:.72rem;color:var(--tx2);margin-bottom:2px}.dc .inf h3{font-size:1.35rem;font-weight:700}
+.dc.total .ic{background:var(--zbl)}.dc.total h3{color:var(--zb)}
+.dc.ok .ic{background:#e6f9ed}.dc.ok h3{color:var(--ok)}
+.dc.warn .ic{background:#fff4e0}.dc.warn h3{color:var(--wn)}
+.dc.alert .ic{background:#ffeaea}.dc.alert h3{color:var(--dg)}
+.dc.dmg .ic{background:#f5e0ff}.dc.dmg h3{color:var(--dmg)}
+
+/* ---------- tarjetas de módulo ---------- */
+.mods{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:1rem}
+.mod{background:var(--wh);border:1px solid var(--bd);border-radius:14px;padding:1.1rem 1.2rem;display:flex;flex-direction:column;
+  gap:.7rem;border-top:4px solid var(--bd);transition:.15s;cursor:pointer}
+.mod:hover{box-shadow:0 8px 24px rgba(13,24,168,.1);transform:translateY(-2px)}
+.mod.activo{border-top-color:var(--ok)}.mod.obra{border-top-color:var(--wn)}.mod.plan{border-top-color:var(--bd)}
+.mod-head{display:flex;align-items:flex-start;gap:11px}
+.mod-ic{width:40px;height:40px;border-radius:10px;background:var(--zbl);display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex:none}
+.mod h4{font-size:.91rem;font-weight:700;line-height:1.25}
+.mod .desc{font-size:.76rem;color:var(--tx2);line-height:1.45;flex:1}
+.mod .resp{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:3px}
+.avatar{width:23px;height:23px;border-radius:50%;background:var(--zb);color:#fff;font-size:.63rem;font-weight:700;
+  display:inline-flex;align-items:center;justify-content:center;flex:none}
+.avatar.sin{background:var(--bd);color:var(--tx2)}
+.avatar.sm{width:18px;height:18px;font-size:.55rem}
+.mod .pie{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid var(--bd);padding-top:.7rem;margin-top:.2rem}
+.estado{font-size:.67rem;font-weight:700;padding:2px 9px;border-radius:20px;letter-spacing:.3px}
+.e-activo{background:#e6f9ed;color:#1a7a38}.e-obra{background:#fff4e0;color:#b36200}.e-plan{background:#f0f0f0;color:#777}
+.kpi-mini{font-size:.73rem;color:var(--tx2)}
+.kpi-mini b{font-size:1rem;color:var(--tx);display:block;line-height:1.2}
+.kpi-mini b.bien{color:var(--ok)}.kpi-mini b.mal{color:var(--dg)}.kpi-mini b.medio{color:var(--wn)}
+
+/* ---------- herramientas ---------- */
+.tb{display:flex;gap:.7rem;margin-bottom:1.3rem;flex-wrap:wrap;align-items:center}
+.tb input,.tb select{padding:8px 13px;border:1px solid var(--bd);border-radius:8px;font-size:.84rem;background:var(--wh);
+  color:var(--tx);outline:none;width:auto;min-width:160px;max-width:260px}
+.tb input{flex:1;min-width:200px;max-width:none}
+.tb input:focus,.tb select:focus{border-color:var(--zb)}
+.btn{padding:9px 18px;border-radius:8px;border:none;cursor:pointer;font-size:.84rem;font-weight:600;transition:.15s;
+  display:inline-flex;align-items:center;gap:6px;font-family:inherit}
+.btn-p{background:var(--zb);color:#fff}.btn-p:hover{background:var(--zbd)}
+.btn-s{background:var(--wh);color:var(--zb);border:1px solid var(--zb)}.btn-s:hover{background:var(--zbl)}
+.btn-g{background:#1a7a38;color:#fff}.btn-g:hover{background:#155e2c}
+.btn-sm{padding:5px 10px;font-size:.76rem}
+.btn-del{background:#ffeaea;color:#aa1111;border:1px solid #ffcaca;border-radius:6px;cursor:pointer;font-size:.76rem;padding:5px 9px;font-family:inherit}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip-f{border:1px solid var(--bd);background:var(--wh);border-radius:20px;padding:5px 13px;font-size:.78rem;cursor:pointer;
+  font-family:inherit;color:var(--tx2);font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.chip-f:hover{border-color:var(--zb);color:var(--zb)}
+.chip-f.on{background:var(--zb);color:#fff;border-color:var(--zb)}
+.chip-f.on .avatar{background:rgba(255,255,255,.25)}
+
+/* ---------- candado ---------- */
+.lock-bar{background:var(--wh);border:1px solid var(--bd);border-left:4px solid var(--wn);border-radius:10px;
+  padding:.85rem 1.1rem;margin-bottom:1.3rem;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.lock-bar.abierto{border-left-color:var(--ok)}
+.lock-bar .ic{font-size:1.35rem}.lock-bar .txt{flex:1;min-width:210px}
+.lock-bar h5{font-size:.86rem;font-weight:700}.lock-bar p{font-size:.75rem;color:var(--tx2);margin-top:1px}
+.contador{font-size:.73rem;font-weight:700;color:var(--ok);background:#e6f9ed;padding:3px 10px;border-radius:20px}
+
+/* ---------- tablas ---------- */
+.tw{background:var(--wh);border:1px solid var(--bd);border-radius:12px;overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:.83rem}
+thead{background:var(--zb);color:#fff}
+thead th{padding:11px 13px;text-align:left;font-weight:600;font-size:.76rem;white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--bd)}tbody tr:hover{background:var(--zbl)}
+tbody td{padding:9px 13px;white-space:nowrap}
+td.wrap-td{white-space:normal;min-width:210px}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.sb{padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:600;white-space:nowrap;display:inline-block}
+.s-ok{background:#e6f9ed;color:#1a7a38}.s-warn{background:#fff4e0;color:#b36200}
+.s-venc{background:#ffeaea;color:#aa1111}.s-na{background:#f0f0f0;color:#888}
+.s-prog{background:var(--zbl);color:var(--zb)}
+.empty{text-align:center;padding:2.6rem;color:var(--tx2);font-size:.88rem}
+.tachado{text-decoration:line-through;color:var(--tx2)}
+.matriz td,.matriz th{text-align:center}
+.matriz td:first-child,.matriz th:first-child{text-align:left}
+.matriz input[type=checkbox]{width:17px;height:17px;cursor:pointer}
+
+/* ---------- pendientes ---------- */
+.pend-item{background:var(--wh);border:1px solid var(--bd);border-radius:11px;padding:.85rem 1rem;display:flex;gap:12px;
+  align-items:flex-start;margin-bottom:.6rem;border-left:4px solid var(--bd)}
+.pend-item.alta{border-left-color:var(--dg)}.pend-item.media{border-left-color:var(--wn)}
+.pend-item.baja{border-left-color:var(--ok)}.pend-item.hecho{opacity:.55;border-left-color:var(--bd)}
+.pend-item input[type=checkbox]{width:18px;height:18px;margin-top:2px;cursor:pointer;flex:none}
+.pend-item .cuerpo{flex:1;min-width:0}
+.pend-item h5{font-size:.88rem;font-weight:650;margin-bottom:3px}
+.pend-item .meta{font-size:.73rem;color:var(--tx2);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.vence{font-weight:700}.vence.hoy{color:var(--wn)}.vence.tarde{color:var(--dg)}
+
+/* ---------- proyectos ---------- */
+.prj{background:var(--wh);border:1px solid var(--bd);border-radius:12px;padding:1rem 1.1rem;margin-bottom:.8rem}
+.prj-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:.5rem}
+.prj h5{font-size:.91rem;font-weight:700}.prj .desc{font-size:.77rem;color:var(--tx2);margin-top:2px}
+.barra{height:9px;border-radius:5px;background:var(--bd);overflow:hidden;margin:.6rem 0 .4rem}
+.barra>i{display:block;height:100%;border-radius:5px;background:var(--zb);transition:width .3s}
+.barra>i.listo{background:var(--ok)}.barra>i.riesgo{background:var(--wn)}
+.prj .pie{display:flex;justify-content:space-between;gap:10px;font-size:.74rem;color:var(--tx2);flex-wrap:wrap;align-items:center}
+
+/* ---------- modales ---------- */
+.mo{display:none;position:fixed;inset:0;background:rgba(10,10,30,.55);z-index:1000;align-items:center;justify-content:center;padding:16px}
+.mo.open{display:flex}
+.md{background:var(--wh);border-radius:16px;width:100%;max-width:700px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.md.sm{max-width:520px}
+.mh{padding:1.1rem 1.4rem;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center}
+.mh h2{font-size:.97rem;font-weight:700;color:var(--zb)}
+.mb{padding:1.4rem}
+.mf{padding:1rem 1.4rem;border-top:1px solid var(--bd);display:flex;justify-content:flex-end;gap:.7rem;align-items:center}
+.cb{background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--tx2);line-height:1}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.fgr{display:flex;flex-direction:column;gap:5px}.fgr.full{grid-column:1/-1}
+label{font-size:.72rem;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.4px}
+input[type=text],input[type=date],input[type=number],input[type=password],input[type=url],select,textarea{
+  padding:9px 12px;border:1px solid var(--bd);border-radius:8px;font-size:.87rem;color:var(--tx);background:var(--wh);
+  outline:none;font-family:inherit;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--zb);box-shadow:0 0 0 3px rgba(13,24,168,.12)}
+textarea{resize:vertical;min-height:66px}
+small.hint{font-size:.71rem;color:var(--tx2)}
+.multi{border:1px solid var(--bd);border-radius:8px;padding:8px;max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+.multi label{display:flex;align-items:center;gap:8px;font-size:.83rem;text-transform:none;letter-spacing:0;color:var(--tx);font-weight:500;cursor:pointer}
+.multi input{width:auto}
+.iconos{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:5px;max-height:120px;overflow-y:auto;
+  border:1px solid var(--bd);border-radius:8px;padding:7px}
+.ico-op{border:1px solid transparent;background:var(--bg);border-radius:8px;padding:6px;font-size:1.05rem;cursor:pointer}
+.ico-op.on{border-color:var(--zb);background:var(--zbl)}
+
+/* ---------- configuración ---------- */
+.subtabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:1.3rem;border-bottom:1px solid var(--bd)}
+.st{background:none;border:0;border-bottom:2px solid transparent;padding:9px 14px;font:inherit;font-size:.84rem;
+  font-weight:600;color:var(--tx2);cursor:pointer}
+.st:hover{color:var(--zb)}.st.active{color:var(--zb);border-bottom-color:var(--zb)}
+.subsec{display:none}.subsec.active{display:block}
+.cfg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:1rem}
+.cfg-card{background:var(--wh);border:1px solid var(--bd);border-radius:12px;padding:1.2rem}
+.cfg-card h4{font-size:.88rem;font-weight:700;margin-bottom:3px}
+.cfg-card .sub{font-size:.75rem;color:var(--tx2);margin-bottom:1rem}
+.cfg-card .fgr{margin-bottom:.85rem}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:.6rem 0;border-bottom:1px solid var(--bd)}
+.sw:last-child{border:0}
+.sw .t{font-size:.83rem}.sw .t small{display:block;color:var(--tx2);font-size:.72rem;margin-top:1px}
+.toggle{width:40px;height:22px;border-radius:20px;background:var(--bd);position:relative;cursor:pointer;flex:none;border:0}
+.toggle.on{background:var(--zb)}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.15s}
+.toggle.on::after{left:20px}
+
+.note{font-size:.77rem;color:var(--tx2);border-left:3px solid var(--wn);padding:9px 13px;background:var(--wh);border-radius:0 8px 8px 0;margin-top:1rem}
+.toast{position:fixed;bottom:1.8rem;right:1.8rem;background:var(--tx);color:#fff;padding:12px 22px;border-radius:10px;font-size:.84rem;
+  z-index:9999;transform:translateY(100px);opacity:0;transition:.3s}
+.toast.show{transform:translateY(0);opacity:1}
+.spinner{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;
+  animation:spin .6s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+
+/* ---------- carátula del día ---------- */
+.cab-dia{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:1.4rem}
+.cab-dia .cd-txt{flex:1;min-width:230px}
+.cab-dia h3{font-size:1.3rem;font-weight:700;letter-spacing:-.3px}
+.cab-dia p{font-size:.82rem;color:var(--tx2);margin-top:2px}
+.cd-sw{display:flex;gap:6px}
+.persona{background:var(--wh);border:1px solid var(--bd);border-radius:13px;padding:1rem 1.1rem}
+.persona .ph{display:flex;align-items:center;gap:10px;margin-bottom:.8rem}
+.persona .ph .nm{font-size:.88rem;font-weight:700;line-height:1.2}
+.persona .ph .rl{font-size:.71rem;color:var(--tx2)}
+.persona .cifras{display:flex;gap:14px;margin-bottom:.7rem}
+.persona .cifras div{font-size:.72rem;color:var(--tx2);line-height:1.25}
+.persona .cifras b{display:block;font-size:1.15rem;color:var(--tx);font-weight:700}
+.persona .cifras b.mal{color:var(--dg)}.persona .cifras b.bien{color:var(--ok)}
+.persona .barra{height:7px;margin:0 0 .55rem}
+.persona .tareas{border-top:1px solid var(--bd);padding-top:.6rem;display:flex;flex-direction:column;gap:.35rem}
+.persona .mini{font-size:.78rem;display:flex;gap:7px;align-items:flex-start}
+.persona .mini i{width:7px;height:7px;border-radius:50%;margin-top:6px;flex:none;background:var(--bd)}
+.persona .mini i.alta{background:var(--dg)}.persona .mini i.media{background:var(--wn)}.persona .mini i.baja{background:var(--ok)}
+.persona .mini.ok{color:var(--tx2);text-decoration:line-through}
+.persona .mas{font-size:.73rem;color:var(--zb);cursor:pointer;margin-top:.3rem;font-weight:600}
+.rejilla-personas{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1rem}
+.grupo-dia{margin-bottom:1.4rem}
+.grupo-dia .gt{font-size:.78rem;font-weight:700;color:var(--tx2);margin-bottom:.55rem;display:flex;align-items:center;gap:8px}
+.grupo-dia .gt .pill{background:var(--bd);color:var(--tx2);border-radius:20px;padding:1px 8px;font-size:.7rem}
+.grupo-dia.urgente .gt{color:var(--dg)}
+.grupo-dia.urgente .gt .pill{background:#ffeaea;color:var(--dg)}
+
+/* ---------- módulos en tabla ---------- */
+.tabla-mods td{padding:10px 13px}
+.tabla-mods .nom{font-weight:650;display:flex;align-items:center;gap:9px}
+.punto-col{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+.p-activo{background:var(--ok)}.p-obra{background:var(--wn)}.p-plan{background:#ccccdd}
+
+/* ---------- revisión por la dirección ---------- */
+.dir-head{background:var(--zb);color:#fff;border-radius:14px;padding:1.4rem 1.7rem;display:flex;
+  align-items:center;justify-content:space-between;gap:20px;margin-bottom:1.3rem;flex-wrap:wrap}
+.dir-head .marca-b{height:30px;filter:brightness(0) invert(1)}
+.dir-head h1{font-size:1.15rem;font-weight:700}
+.dir-head p{font-size:.78rem;opacity:.82;margin-top:2px}
+.dir-head .per{text-align:right;font-size:.78rem;opacity:.85}
+.dir-head .per b{display:block;font-size:1rem;opacity:1}
+.exec-kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:1.1rem;margin-bottom:1.3rem}
+.ek{background:var(--wh);border:1px solid var(--bd);border-radius:14px;padding:1.3rem 1.4rem}
+.ek .lbl{font-size:.72rem;color:var(--tx2);text-transform:uppercase;letter-spacing:1px;font-weight:700}
+.ek .big{font-size:2.7rem;font-weight:700;line-height:1.05;margin:.3rem 0 .2rem;letter-spacing:-1.3px}
+.ek .big.verde{color:var(--ok)}.ek .big.rojo{color:var(--dg)}.ek .big.ambar{color:var(--wn)}.ek .big.azul{color:var(--zb)}
+.ek .pie{font-size:.77rem;color:var(--tx2)}
+.dir-row{display:grid;grid-template-columns:1.3fr 1fr;gap:1.1rem;margin-bottom:1.1rem}
+@media(max-width:1000px){.dir-row{grid-template-columns:1fr}}
+.card-x{background:var(--wh);border:1px solid var(--bd);border-radius:14px;padding:1.3rem 1.5rem}
+.card-x h3{font-size:.94rem;font-weight:700;margin-bottom:2px}
+.card-x .sub{font-size:.76rem;color:var(--tx2);margin-bottom:1rem}
+.mods-exec{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:.7rem}
+.me{background:var(--bg);border-radius:10px;padding:.8rem;text-align:center;border-top:3px solid var(--bd)}
+.me.activo{border-top-color:var(--ok)}.me.obra{border-top-color:var(--wn)}.me.plan{border-top-color:#d5d5e3}
+.me .ic{font-size:1.25rem}
+.me .nm{font-size:.73rem;font-weight:650;margin-top:4px;line-height:1.25}
+.me .vl{font-size:.74rem;color:var(--tx2);margin-top:3px}
+@media print{.no-print{display:none!important}}
+
+@media(max-width:900px){
+  .side{transform:translateX(-100%)}.side.open{transform:none}
+  .main{margin-left:0}.burger{display:block}
+  .topbar{padding-left:62px}.wrap{padding:16px 14px 60px}.fg{grid-template-columns:1fr}
+  body.nav-open .scrim{display:block}
+}
+@media print{.side,.topbar,.tb,.burger,.mf,.btn,.lock-bar{display:none!important}.main{margin-left:0}.section{display:block!important}}
+</style>
+</head>
+<body>
+
+<div class="login" id="login">
+  <div class="login-card">
+    <img src="logo-zubex.png" srcset="logo-zubex.png 1x, logo-zubex@2x.png 2x" alt="Zubex" class="marca">
+    <p class="sub">Portal de Calidad</p>
+    <div class="login-err" id="loginErr"></div>
+    <div class="fgr"><label>Correo</label><input type="text" id="lgMail" autocomplete="username" placeholder="nombre@zubex.com.mx"></div>
+    <div class="fgr"><label>Contraseña</label><input type="password" id="lgPw" autocomplete="current-password" onkeydown="if(event.key==='Enter')entrar()"></div>
+    <button class="btn btn-p" id="lgBtn" onclick="entrar()">Entrar</button>
+    <p class="login-foot">Sistema de Gestión de Inocuidad y Calidad<br>Zubex Industrial</p>
+  </div>
+</div>
+
+<button class="burger" id="burger" onclick="toggleNav()">☰</button>
+<div class="scrim" onclick="toggleNav()"></div>
+
+<aside class="side" id="side">
+  <div class="side-top">
+    <img src="logo-zubex.png" srcset="logo-zubex.png 1x, logo-zubex@2x.png 2x" alt="Zubex" class="marca">
+    <p>Portal de Calidad</p>
+  </div>
+  <nav class="side-nav" id="sideNav"></nav>
+  <div class="side-foot">
+    <div id="userBox" style="margin-bottom:8px;display:none">
+      <div style="font-weight:600;color:var(--tx);font-size:.76rem" id="userNombre"></div>
+      <div id="userRol" style="font-size:.68rem"></div>
+      <button class="btn btn-s btn-sm" style="margin-top:6px;width:100%" onclick="salir()">Cerrar sesión</button>
+    </div>
+    <span class="sync-dot loading" id="syncDot"></span><span id="syncTxt">Conectando...</span>
+  </div>
+</aside>
+
+<div class="main">
+<header class="topbar">
+  <div><h2 id="tbTitulo">Inicio</h2><div class="crumb" id="tbSub">—</div></div>
+  <span class="dbadge">PORTAL DE CALIDAD</span>
+</header>
+<div class="wrap">
+
+<!-- ============ INICIO: TAREAS Y SEGUIMIENTO ============ -->
+<section class="section active" id="sec-inicio">
+  <div class="cab-dia">
+    <div class="cd-txt">
+      <h3 id="saludo">Buen día</h3>
+      <p id="fechaLarga">—</p>
+    </div>
+    <div class="cd-sw">
+      <button class="chip-f on" id="swMias" onclick="setVista('mias')">Mis tareas</button>
+      <button class="chip-f" id="swEquipo" onclick="setVista('equipo')">Todo el equipo</button>
+    </div>
+    <button class="btn btn-p" onclick="abrirPend()">＋ Nueva tarea</button>
+  </div>
+
+  <div class="dg" id="kpisDia"></div>
+
+  <div id="bloqueEquipo"></div>
+
+  <div class="section-title" id="tituloTareas">Tareas <span class="linea"></span>
+    <div class="chips" id="chipsDia"></div></div>
+  <div id="listaDia"></div>
+</section>
+
+<!-- ============ MÓDULOS ============ -->
+<section class="section" id="sec-modulos">
+  <div class="tb">
+    <input type="text" id="buscaMod" placeholder="🔍  Buscar módulo..." oninput="renderModulos()">
+    <select id="filModResp" onchange="renderModulos()"><option value="">Todos los responsables</option></select>
+    <select id="filModEstado" onchange="renderModulos()">
+      <option value="">Todos los estados</option><option value="activo">Activos</option>
+      <option value="obra">En construcción</option><option value="plan">Planeados</option></select>
+    <button class="btn btn-p" onclick="abrirModulo()">🔒 Agregar módulo</button>
+  </div>
+  <div class="tw"><table class="tabla-mods" id="tablaModulos"></table></div>
+  <p class="note">El seguimiento de cada módulo es de quien lo tiene asignado. El portal no vigila sus vencimientos.</p>
+</section>
+
+<!-- ============ REVISIÓN POR LA DIRECCIÓN ============ -->
+<section class="section" id="sec-direccion">
+  <div class="tb no-print">
+    <select id="dirPeriodo" onchange="renderDireccion()"></select>
+    <button class="btn btn-s" onclick="window.print()">🖨️ Imprimir o guardar en PDF</button>
+  </div>
+  <div id="panelDireccion"></div>
+</section>
+
+<!-- ============ PROYECTOS ============ -->
+<section class="section" id="sec-proyectos">
+  <div class="tb">
+    <select id="filPrjEstado" onchange="renderProyectos()">
+      <option value="">Todos los estados</option><option value="curso">En curso</option>
+      <option value="riesgo">En riesgo</option><option value="pausa">En pausa</option><option value="listo">Terminados</option>
+    </select>
+    <select id="filPrjResp" onchange="renderProyectos()"><option value="">Todos</option></select>
+    <button class="btn btn-g" onclick="exportarProyectos()">📊 Excel</button>
+    <button class="btn btn-p" onclick="abrirPrj()">＋ Nuevo proyecto</button>
+  </div>
+  <div id="listaPrj"></div>
+</section>
+
+<!-- ============ FICHA DE MÓDULO ============ -->
+<section class="section" id="sec-modulo">
+  <div id="fichaMod"></div>
+</section>
+
+<!-- ============ ADMINISTRADOR ============ -->
+<section class="section" id="sec-admin">
+  <div id="lockAdmin"></div>
+  <div class="subtabs">
+    <button class="st active" onclick="subTab('asign',this)">Módulos y responsables</button>
+    <button class="st" onclick="subTab('usuarios',this)">Usuarios y permisos</button>
+    <button class="st" onclick="subTab('respaldo',this)">Respaldos</button>
+  </div>
+
+  <div class="subsec active" id="sub-asign">
+    <div class="section-title">Quién lleva qué <span class="linea"></span>
+      <button class="btn btn-p btn-sm" onclick="abrirModulo()">＋ Agregar módulo</button></div>
+    <div class="tw"><table class="matriz" id="tablaAsign"></table></div>
+    <p class="note">Un módulo puede tener varios responsables. De esta matriz sale el filtro «solo los míos» del menú.</p>
+  </div>
+
+  <div class="subsec" id="sub-usuarios">
+    <div class="tw" id="twUsuarios"></div>
+    <p class="note">Las cuentas se crean en la consola de Firebase (Authentication → Users). Aquí se les asigna el perfil. La primera persona que entra queda como administrador.</p>
+  </div>
+
+  <div class="subsec" id="sub-respaldo">
+    <div class="cfg-grid">
+      <div class="cfg-card">
+        <h4>📦 Respaldo del portal</h4>
+        <p class="sub">Descarga todo lo que vive en el portal, para guardarlo en la red interna.</p>
+        <div class="tb" style="margin:0">
+          <button class="btn btn-p" onclick="respaldoTotal()">📊 Descargar respaldo completo</button>
+        </div>
+        <p class="note" style="margin-top:1rem">Hazlo una vez al mes y guárdalo en la carpeta de calidad. Es el respaldo que pide el control de registros.</p>
+      </div>
+      <div class="cfg-card">
+        <h4>📅 Último respaldo</h4>
+        <p class="sub">Cuándo se descargó el respaldo por última vez.</p>
+        <div style="font-size:1.6rem;font-weight:700" id="ultResp">—</div>
+        <div style="font-size:.76rem;color:var(--tx2)" id="ultRespQuien"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONFIGURACIÓN ============ -->
+<section class="section" id="sec-config">
+  <div id="lockConfig"></div>
+  <div class="cfg-grid">
+
+    <div class="cfg-card">
+      <h4>🏭 Identidad del portal</h4>
+      <p class="sub">Lo que aparece en el encabezado y en los reportes.</p>
+      <div class="fgr"><label>Nombre del portal</label><input type="text" id="cfPortal"></div>
+      <div class="fgr"><label>Empresa</label><input type="text" id="cfEmpresa"></div>
+      <div class="fgr"><label>Planta / sitio</label><input type="text" id="cfPlanta"></div>
+      <div class="fgr"><label>Sistema de gestión</label><input type="text" id="cfSistema"></div>
+    </div>
+
+    <div class="cfg-card">
+      <h4>📜 Referencias normativas</h4>
+      <p class="sub">Se imprimen en los encabezados de los módulos y en los Excel.</p>
+      <div class="fgr"><label>Código SQF</label><input type="text" id="cfSqf" placeholder="Food Packaging Edición 9"></div>
+      <div class="fgr"><label>Cláusula de monitoreo ambiental</label><input type="text" id="cfClausula"></div>
+      <div class="fgr"><label>Otros esquemas</label><input type="text" id="cfOtros"></div>
+      <div class="fgr"><label>Próxima auditoría de certificación</label><input type="date" id="cfAuditoria"></div>
+    </div>
+
+    <div class="cfg-card">
+      <h4>🎯 Metas e indicadores</h4>
+      <p class="sub">Definen cuándo una tarjeta se pone verde, ámbar o roja.</p>
+      <div class="fgr"><label>Meta de cumplimiento de programas (%)</label><input type="number" id="cfMeta" min="1" max="100"></div>
+      <div class="fgr"><label>Avisar cuando falten (días)</label><input type="number" id="cfAviso" min="1"></div>
+      <div class="fgr"><label>Desviación abierta se marca en rojo a los (días)</label><input type="number" id="cfDesv" min="1"></div>
+    </div>
+
+    <div class="cfg-card">
+      <h4>🔐 Seguridad</h4>
+      <p class="sub">Cómo se protege la edición del portal.</p>
+      <div class="sw"><div class="t">Pedir contraseña para editar
+          <small>Administrador y Configuración quedan bloqueados hasta confirmar</small></div>
+        <button class="toggle" id="swCandado" onclick="toggleCfg('candado',this)"></button></div>
+      <div class="sw"><div class="t">Minutos antes de volver a bloquear
+          <small><span id="lblMin">15</span> minutos</small></div>
+        <input type="number" id="cfMinutos" min="1" max="120" style="width:80px" onchange="$('#lblMin').textContent=this.value"></div>
+      <div class="sw"><div class="t">Pedir el motivo al cambiar un criterio
+          <small>Límites, frecuencias y metas quedan con su justificación en la bitácora</small></div>
+        <button class="toggle" id="swMotivo" onclick="toggleCfg('motivo',this)"></button></div>
+      <div class="sw"><div class="t">Cada quien edita solo sus módulos
+          <small>Si se apaga, los administradores editan todo</small></div>
+        <button class="toggle" id="swPropios" onclick="toggleCfg('propios',this)"></button></div>
+    </div>
+
+    <div class="cfg-card">
+      <h4>👁️ Qué ve cada perfil</h4>
+      <p class="sub">Lo que aparece al entrar, según quién entra.</p>
+      <div class="sw"><div class="t">Captura entra viendo solo sus módulos
+          <small>Puede quitar el filtro</small></div>
+        <button class="toggle" id="swEntraMio" onclick="toggleCfg('entraMio',this)"></button></div>
+      <div class="sw"><div class="t">Mostrar pendientes de otras personas
+          <small>Apagado: cada quien ve los suyos</small></div>
+        <button class="toggle" id="swPendTodos" onclick="toggleCfg('pendTodos',this)"></button></div>
+      <div class="sw"><div class="t">Mostrar módulos planeados en el menú
+          <small>Apagado: solo aparecen los activos y en construcción</small></div>
+        <button class="toggle" id="swVerPlan" onclick="toggleCfg('verPlan',this)"></button></div>
+    </div>
+
+  </div>
+  <div class="tb" style="margin-top:1.5rem"><button class="btn btn-p" onclick="guardarConfig()">Guardar cambios</button>
+    <button class="btn btn-s" onclick="renderConfig()">Descartar</button></div>
+  <p class="note">Los cambios de esta pantalla afectan a todo el portal y quedan registrados en la bitácora.</p>
+</section>
+
+<!-- ============ BITÁCORA ============ -->
+<section class="section" id="sec-bitacora">
+  <div class="tb">
+    <input type="text" id="buscaBit" placeholder="🔍  Buscar usuario, módulo, acción..." oninput="renderBitacora()">
+    <select id="filBitTipo" onchange="renderBitacora()"><option value="">Todos los tipos</option></select>
+    <button class="btn btn-s" onclick="cargarBitacora(true)">🔄 Actualizar</button>
+    <button class="btn btn-g" onclick="exportarBitacora()">📊 Excel</button>
+  </div>
+  <div class="tw" id="twBitacora"></div>
+  <p class="note">Registro de cambios del portal. No se puede editar ni borrar desde aquí.</p>
+</section>
+
+</div></div>
+
+<!-- ============ MODAL: MÓDULO ============ -->
+<div class="mo" id="moMod"><div class="md">
+  <div class="mh"><h2 id="moModTit">＋ Agregar módulo</h2><button class="cb" onclick="cerrar('moMod')">×</button></div>
+  <div class="mb">
+    <input type="hidden" id="mId">
+    <div class="fg">
+      <div class="fgr"><label>Nombre del módulo *</label><input type="text" id="mNombre" placeholder="Control de Plagas"></div>
+      <div class="fgr"><label>Estado</label><select id="mEstado">
+        <option value="activo">Activo — ya se usa</option>
+        <option value="obra">En construcción</option>
+        <option value="plan" selected>Planeado</option></select></div>
+      <div class="fgr full"><label>Qué cubre</label><textarea id="mDesc" placeholder="Estaciones, inspecciones y reportes del proveedor de control."></textarea></div>
+      <div class="fgr full"><label>Icono</label><div class="iconos" id="mIconos"></div></div>
+      <div class="fgr full"><label>Responsables</label><div class="multi" id="mResp"></div>
+        <small class="hint">Pueden ser varios. De aquí sale el filtro por persona.</small></div>
+      <div class="fgr"><label>Quién verifica</label><select id="mVerifica"></select>
+        <small class="hint">Quien revisa que el programa se esté cumpliendo</small></div>
+      <div class="fgr"><label>Cada cuánto se verifica</label><select id="mFrecVer">
+        <option value="">— sin definir —</option><option>Mensual</option><option>Trimestral</option>
+        <option>Semestral</option><option>Anual</option></select></div>
+      <div class="fgr"><label>Procedimiento que lo respalda</label><input type="text" id="mProc" placeholder="ASC-P-08"></div>
+      <div class="fgr"><label>Revisión</label><input type="text" id="mProcRev" placeholder="5"></div>
+      <div class="fgr"><label>Formato / registro</label><input type="text" id="mFormato" placeholder="ASC-F-23"></div>
+      <div class="fgr"><label>Revisión</label><input type="text" id="mFormatoRev" placeholder="9"></div>
+      <div class="fgr full"><label>Liga al tablero (si ya existe)</label><input type="url" id="mLiga" placeholder="https://..."></div>
+      <div class="fgr full"><label>Indicador que muestra la tarjeta</label>
+        <div class="fg" style="gap:.7rem">
+          <input type="text" id="mKpiValor" placeholder="Valor, ej. 81">
+          <input type="text" id="mKpiTexto" placeholder="Texto, ej. vencidos de 222">
+        </div>
+        <small class="hint">Se captura a mano mientras el módulo no tenga tablero propio.</small></div>
+      <div class="fgr"><label>Semáforo del indicador</label><select id="mKpiColor">
+        <option value="">Neutro</option><option value="bien">Verde</option>
+        <option value="medio">Ámbar</option><option value="mal">Rojo</option></select></div>
+    </div>
+  </div>
+  <div class="mf">
+    <button class="btn btn-del" id="mBorrar" onclick="borrarModulo()" style="margin-right:auto">🗑 Eliminar</button>
+    <button class="btn btn-s" onclick="cerrar('moMod')">Cancelar</button>
+    <button class="btn btn-p" onclick="guardarModulo()">Guardar</button>
+  </div>
+</div></div>
+
+<!-- ============ MODAL: PENDIENTE ============ -->
+<div class="mo" id="moPend"><div class="md sm">
+  <div class="mh"><h2 id="moPendTit">＋ Asignar pendiente</h2><button class="cb" onclick="cerrar('moPend')">×</button></div>
+  <div class="mb">
+    <input type="hidden" id="pId">
+    <div class="fg">
+      <div class="fgr full"><label>Qué hay que hacer *</label><input type="text" id="pTexto" placeholder="Enviar muestras al laboratorio"></div>
+      <div class="fgr"><label>Para quién *</label><select id="pResp"></select></div>
+      <div class="fgr"><label>Prioridad</label><select id="pPrio">
+        <option value="alta">Alta</option><option value="media" selected>Media</option><option value="baja">Baja</option></select></div>
+      <div class="fgr"><label>Vence</label><input type="date" id="pVence"></div>
+      <div class="fgr"><label>Módulo relacionado</label><select id="pModulo"></select></div>
+      <div class="fgr full"><label>Detalle</label><textarea id="pNota"></textarea></div>
+    </div>
+  </div>
+  <div class="mf">
+    <button class="btn btn-del" id="pBorrar" onclick="borrarPend()" style="margin-right:auto">🗑 Eliminar</button>
+    <button class="btn btn-s" onclick="cerrar('moPend')">Cancelar</button>
+    <button class="btn btn-p" onclick="guardarPend()">Guardar</button>
+  </div>
+</div></div>
+
+<!-- ============ MODAL: PROYECTO ============ -->
+<div class="mo" id="moPrj"><div class="md sm">
+  <div class="mh"><h2 id="moPrjTit">＋ Nuevo proyecto</h2><button class="cb" onclick="cerrar('moPrj')">×</button></div>
+  <div class="mb">
+    <input type="hidden" id="jId">
+    <div class="fg">
+      <div class="fgr full"><label>Nombre del proyecto *</label><input type="text" id="jNombre"></div>
+      <div class="fgr full"><label>Qué incluye</label><textarea id="jDesc"></textarea></div>
+      <div class="fgr"><label>Responsable</label><select id="jResp"></select></div>
+      <div class="fgr"><label>Estado</label><select id="jEstado">
+        <option value="curso">En curso</option><option value="riesgo">En riesgo</option>
+        <option value="pausa">En pausa</option><option value="listo">Terminado</option></select></div>
+      <div class="fgr"><label>Avance (%)</label><input type="number" id="jAvance" min="0" max="100" value="0"></div>
+      <div class="fgr"><label>Fecha compromiso</label><input type="date" id="jFecha"></div>
+      <div class="fgr full"><label>Módulo relacionado</label><select id="jModulo"></select></div>
+    </div>
+  </div>
+  <div class="mf">
+    <button class="btn btn-del" id="jBorrar" onclick="borrarPrj()" style="margin-right:auto">🗑 Eliminar</button>
+    <button class="btn btn-s" onclick="cerrar('moPrj')">Cancelar</button>
+    <button class="btn btn-p" onclick="guardarPrj()">Guardar</button>
+  </div>
+</div></div>
+
+<!-- ============ MODAL: CANDADO ============ -->
+<div class="mo" id="moLock"><div class="md sm">
+  <div class="mh"><h2>🔓 Confirmar tu contraseña</h2><button class="cb" onclick="cerrar('moLock')">×</button></div>
+  <div class="mb">
+    <p style="font-size:.86rem;color:var(--tx2);margin-bottom:1.2rem;line-height:1.55">
+      Vas a entrar en modo edición del portal. Escribe <b>tu propia contraseña</b> para confirmar que eres tú.</p>
+    <div class="login-err" id="lockErr"></div>
+    <div class="fgr"><label id="lockLabel">Contraseña</label>
+      <input type="password" id="lockPw" onkeydown="if(event.key==='Enter')desbloquear()"></div>
+    <p class="hint" style="margin-top:.9rem">Se vuelve a bloquear solo después de <b id="lockMin">15</b> minutos.</p>
+  </div>
+  <div class="mf"><button class="btn btn-s" onclick="cerrar('moLock')">Cancelar</button>
+    <button class="btn btn-p" id="lockBtn" onclick="desbloquear()">Desbloquear</button></div>
+</div></div>
+
+<!-- ============ MODAL: MOTIVO ============ -->
+<div class="mo" id="moMotivo"><div class="md sm">
+  <div class="mh"><h2>✍️ Motivo del cambio</h2><button class="cb" onclick="cerrar('moMotivo')">×</button></div>
+  <div class="mb">
+    <p style="font-size:.86rem;color:var(--tx2);margin-bottom:1rem;line-height:1.55" id="motivoQue"></p>
+    <div class="fgr"><label>Por qué se cambia *</label>
+      <textarea id="motivoTxt" placeholder="Ej. Se ajusta la meta tras la revisión por la dirección de octubre"></textarea></div>
+    <p class="hint" style="margin-top:.8rem">Queda en la bitácora junto al cambio. Es lo que pregunta el auditor.</p>
+  </div>
+  <div class="mf"><button class="btn btn-s" onclick="cerrar('moMotivo')">Cancelar</button>
+    <button class="btn btn-p" onclick="confirmarMotivo()">Guardar cambio</button></div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+/* ==========================================================
+   ZUBEX · PORTAL DE CALIDAD
+   Sistema de Gestión de Inocuidad y Calidad
+   ========================================================== */
+const firebaseConfig = {
+  apiKey: "PEGA_AQUI_TU_API_KEY",
+  authDomain: "zubex-microbiologia.firebaseapp.com",
+  projectId: "zubex-microbiologia",
+  storageBucket: "zubex-microbiologia.firebasestorage.app",
+  messagingSenderId: "604351962205",
+  appId: "PEGA_AQUI_TU_APP_ID"
+};
+
+let db = null, auth = null, USER = null, ROL = 'lectura', MODO_LOCAL = false;
+const LS = 'zxportal_v1';
+
+/* ---------- estado ---------- */
+let CFG = null, MODULOS = [], PEND = [], PRJ = [], USUARIOS = [], BITACORA = [];
+let FILTRO_RESP = '', SOLO_MIOS = false, MOD_ABIERTO = null;
+let DESBLOQUEADO_HASTA = 0, _tickLock = null, _motivoPendiente = null;
+
+const ICONOS = ['📐','🧫','📋','🪟','🔍','📨','📑','🐜','⚗️','🎓','✅','📈','🧪','🌡️','🚿','🧰','📦','🏷️','🚚','👷','🔬','📊','🗂️','⚠️','🧯','💧','🥽','🏭'];
+
+/* ---------- utilidades ---------- */
+const $ = s => document.querySelector(s);
+const hoy = () => new Date().toISOString().slice(0, 10);
+const fx = iso => iso ? iso.split('-').reverse().join('/') : '';
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const uid = p => (p || 'x') + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const dias = (a, b) => Math.round((new Date(b + 'T12:00') - new Date(a + 'T12:00')) / 864e5);
+const modulo = id => MODULOS.find(m => m.id === id);
+const usuario = uidu => USUARIOS.find(u => u.uid === uidu);
+function iniciales(nombre) {
+  const p = String(nombre || '?').trim().split(/\s+/);
+  return ((p[0] || '?')[0] + (p[1] ? p[1][0] : '')).toUpperCase();
+}
+function nombreCorto(u) {
+  if (!u) return 'Sin asignar';
+  const p = String(u.nombre || u.email).trim().split(/\s+/);
+  return p.length > 1 ? p[0] + ' ' + p[1][0] + '.' : p[0];
+}
+function avatar(uidu, sm) {
+  const u = usuario(uidu);
+  return u ? `<span class="avatar${sm ? ' sm' : ''}" title="${esc(u.nombre || u.email)}">${iniciales(u.nombre || u.email)}</span>`
+           : `<span class="avatar sin${sm ? ' sm' : ''}" title="Sin asignar">?</span>`;
+}
+function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2800); }
+function sync(e, t) { $('#syncDot').className = 'sync-dot ' + e; $('#syncTxt').textContent = t; }
+function cerrar(id) { $('#' + id).classList.remove('open'); }
+function abrir(id) { $('#' + id).classList.add('open'); }
+function toggleNav() { $('#side').classList.toggle('open'); document.body.classList.toggle('nav-open'); }
+const esAdmin = () => ROL === 'admin';
+const puedeCapturar = () => ROL === 'admin' || ROL === 'captura';
+const miUid = () => USER ? USER.uid : null;
+
+/* ==========================================================
+   ACCESO
+   ========================================================== */
+function loginErr(m) { const e = $('#loginErr'); e.textContent = m; e.style.display = m ? 'block' : 'none'; }
+const MSG_AUTH = {
+  'auth/invalid-credential':'Correo o contraseña incorrectos',
+  'auth/invalid-email':'El correo no tiene un formato válido',
+  'auth/user-not-found':'Ese correo no está dado de alta',
+  'auth/wrong-password':'Contraseña incorrecta',
+  'auth/too-many-requests':'Demasiados intentos. Espera unos minutos.',
+  'auth/network-request-failed':'Sin conexión a internet'
+};
+async function entrar() {
+  const mail = $('#lgMail').value.trim(), pw = $('#lgPw').value;
+  if (!mail || !pw) { loginErr('Escribe tu correo y tu contraseña'); return; }
+  const b = $('#lgBtn'); b.innerHTML = '<span class="spinner"></span> Entrando'; b.disabled = true;
+  try { await auth.signInWithEmailAndPassword(mail, pw); loginErr(''); }
+  catch (e) { loginErr(MSG_AUTH[e.code] || ('No se pudo entrar: ' + (e.message || e))); }
+  b.innerHTML = 'Entrar'; b.disabled = false;
+}
+async function salir() {
+  if (!confirm('¿Cerrar sesión?')) return;
+  try { await auth.signOut(); location.reload(); } catch (e) { toast('Error: ' + e.message); }
+}
+async function perfilDe(user) {
+  const ref = db.collection('usuarios').doc(user.uid);
+  const d = await ref.get();
+  if (d.exists) return d.data();
+  const todos = await db.collection('usuarios').limit(1).get();
+  const rol = todos.empty ? 'admin' : 'lectura';
+  const perfil = { email: user.email, nombre: user.displayName || user.email.split('@')[0], rol, alta: new Date().toISOString() };
+  await ref.set(perfil);
+  return perfil;
+}
+function pintarUsuario(p) {
+  $('#userBox').style.display = '';
+  $('#userNombre').textContent = p.nombre || p.email;
+  const t = { admin:'Administrador', captura:'Captura', lectura:'Consulta' }[p.rol] || p.rol;
+  $('#userRol').innerHTML = `<span class="rol-chip">${t}</span>`;
+}
+
+/* ==========================================================
+   CANDADO DE EDICIÓN
+   ========================================================== */
+const candadoActivo = () => !CFG || CFG.seguridad.candado !== false;
+function editando() {
+  if (!esAdmin()) return false;
+  if (!candadoActivo()) return true;
+  return Date.now() < DESBLOQUEADO_HASTA;
+}
+function pedirDesbloqueo() {
+  if (!esAdmin()) { toast('Solo un administrador puede editar esta sección'); return; }
+  $('#lockErr').style.display = 'none';
+  $('#lockPw').value = '';
+  $('#lockLabel').textContent = 'Contraseña de ' + (USER ? USER.email : '');
+  $('#lockMin').textContent = CFG.seguridad.minutos || 15;
+  abrir('moLock');
+  setTimeout(() => $('#lockPw').focus(), 120);
+}
+async function desbloquear() {
+  const pw = $('#lockPw').value;
+  if (!pw) return;
+  const b = $('#lockBtn'); b.innerHTML = '<span class="spinner"></span> Verificando'; b.disabled = true;
+  try {
+    if (MODO_LOCAL || !auth || !USER) { DESBLOQUEADO_HASTA = Date.now() + 15 * 60000; }
+    else {
+      const cred = firebase.auth.EmailAuthProvider.credential(USER.email, pw);
+      await USER.reauthenticateWithCredential(cred);
+      DESBLOQUEADO_HASTA = Date.now() + (CFG.seguridad.minutos || 15) * 60000;
+      log('acceso', 'Desbloqueó el modo edición del portal');
+    }
+    cerrar('moLock'); renderTodo(); arrancarTick();
+    toast('Edición desbloqueada');
+  } catch (e) {
+    const err = $('#lockErr');
+    err.textContent = MSG_AUTH[e.code] || 'No se pudo verificar la contraseña';
+    err.style.display = 'block';
+  }
+  b.innerHTML = 'Desbloquear'; b.disabled = false;
+}
+function bloquear() { DESBLOQUEADO_HASTA = 0; renderTodo(); toast('Edición bloqueada'); }
+function arrancarTick() {
+  clearInterval(_tickLock);
+  _tickLock = setInterval(() => {
+    if (!editando()) { clearInterval(_tickLock); renderTodo(); return; }
+    document.querySelectorAll('.contador').forEach(c => {
+      const s = Math.max(0, Math.round((DESBLOQUEADO_HASTA - Date.now()) / 1000));
+      c.textContent = `⏱ ${String(Math.floor(s / 60)).padStart(2,'0')}:${String(s % 60).padStart(2,'0')} restantes`;
+    });
+  }, 1000);
+}
+function barraCandado(destino) {
+  const n = $(destino); if (!n) return;
+  if (!esAdmin()) {
+    n.innerHTML = `<div class="lock-bar"><span class="ic">👁️</span><div class="txt">
+      <h5>Solo lectura</h5><p>Tu perfil no permite cambios en esta sección.</p></div></div>`;
+    return;
+  }
+  if (!candadoActivo()) { n.innerHTML = ''; return; }
+  n.innerHTML = editando()
+    ? `<div class="lock-bar abierto"><span class="ic">🔓</span><div class="txt">
+        <h5>Edición desbloqueada</h5><p>${esc(USER ? (USER.displayName || USER.email) : '')} · los cambios se guardan en la bitácora</p></div>
+        <span class="contador">⏱ —</span>
+        <button class="btn btn-s" onclick="bloquear()">Bloquear ahora</button></div>`
+    : `<div class="lock-bar"><span class="ic">🔒</span><div class="txt">
+        <h5>Edición bloqueada</h5><p>Puedes ver todo, pero para cambiar algo hay que confirmar tu contraseña.</p></div>
+        <button class="btn btn-p" onclick="pedirDesbloqueo()">🔓 Desbloquear edición</button></div>`;
+}
+/* pide el motivo antes de aplicar un cambio de criterio */
+function conMotivo(queCambia, aplicar) {
+  if (!CFG.seguridad.motivo) { aplicar(''); return; }
+  _motivoPendiente = aplicar;
+  $('#motivoQue').textContent = queCambia;
+  $('#motivoTxt').value = '';
+  abrir('moMotivo');
+  setTimeout(() => $('#motivoTxt').focus(), 120);
+}
+function confirmarMotivo() {
+  const m = $('#motivoTxt').value.trim();
+  if (!m) { toast('Escribe el motivo del cambio'); return; }
+  cerrar('moMotivo');
+  const f = _motivoPendiente; _motivoPendiente = null;
+  if (f) f(m);
+}
+
+/* ==========================================================
+   BITÁCORA
+   ========================================================== */
+async function log(tipo, detalle, motivo) {
+  const row = { fecha: new Date().toISOString(), usuario: USER ? USER.email : 'local',
+    nombre: USER ? (USER.displayName || USER.email) : 'local', tipo, detalle,
+    motivo: motivo || null, origen: 'portal' };
+  BITACORA.unshift(row);
+  if (MODO_LOCAL || !db) { guardarLocal(); return; }
+  try { await db.collection('bitacora').add(row); } catch (e) {}
+}
+async function cargarBitacora(aviso) {
+  if (MODO_LOCAL || !db) { renderBitacora(); return; }
+  try {
+    const q = await db.collection('bitacora').orderBy('fecha', 'desc').limit(500).get();
+    BITACORA = q.docs.map(d => d.data());
+    if (aviso) toast('Bitácora actualizada');
+  } catch (e) {}
+  renderBitacora();
+}
+function renderBitacora() {
+  const q = ($('#buscaBit').value || '').toLowerCase(), t = $('#filBitTipo').value;
+  const tipos = [...new Set(BITACORA.map(b => b.tipo))].sort();
+  const sel = $('#filBitTipo');
+  if (sel.options.length !== tipos.length + 1) {
+    sel.innerHTML = '<option value="">Todos los tipos</option>' + tipos.map(x => `<option>${esc(x)}</option>`).join('');
+    sel.value = t;
+  }
+  const l = BITACORA.filter(b => !t || b.tipo === t)
+    .filter(b => !q || (b.nombre + ' ' + b.tipo + ' ' + b.detalle + ' ' + (b.motivo || '')).toLowerCase().includes(q));
+  const n = $('#twBitacora');
+  if (!l.length) { n.innerHTML = '<p class="empty">Sin movimientos registrados.</p>'; return; }
+  n.innerHTML = `<table><thead><tr><th>Fecha y hora</th><th>Usuario</th><th>Tipo</th><th>Qué pasó</th><th>Motivo</th></tr></thead><tbody>`
+    + l.slice(0, 350).map(b => {
+      const f = new Date(b.fecha);
+      return `<tr><td>${f.toLocaleDateString('es-MX')} ${f.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})}</td>
+        <td>${esc(b.nombre || b.usuario)}</td><td><span class="sb s-prog">${esc(b.tipo)}</span></td>
+        <td class="wrap-td">${esc(b.detalle)}</td>
+        <td class="wrap-td" style="color:var(--tx2)">${esc(b.motivo) || '—'}</td></tr>`;
+    }).join('') + '</tbody>';
+}
+</script>
+<script>
+/* ==========================================================
+   CARGA, CONFIGURACIÓN Y MÓDULOS
+   ========================================================== */
+function cfgSemilla() {
+  return {
+    portal:'Portal de Calidad', empresa:'Zubex Industrial', planta:'Monterrey, N.L.',
+    sistema:'Sistema de Gestión de Inocuidad y Calidad',
+    sqf:'Food Packaging Edición 9', clausula:'2.4.8', otros:'BRCGS Packaging Materials', auditoria:'',
+    meta:90, aviso:7, desv:14,
+    seguridad:{ candado:true, minutos:15, motivo:true, propios:false },
+    vista:{ entraMio:true, pendTodos:true, verPlan:true },
+    respaldo:{ fecha:null, quien:null }
+  };
+}
+const MODULOS_SEMILLA = [
+  { nombre:'Calibraciones', icono:'📐', estado:'activo', orden:1,
+    desc:'Equipos de medición, calibración y verificación.', liga:'https://gamabet26.github.io/ZX-Calidad/',
+    proc:'', procRev:'', formato:'', formatoRev:'', kpiValor:'', kpiTexto:'equipos vencidos', kpiColor:'mal' },
+  { nombre:'Microbiología', icono:'🧫', estado:'activo', orden:2,
+    desc:'Programa anual, análisis de riesgo e informes de laboratorio.', liga:'',
+    proc:'ASC-P-08', procRev:'5', formato:'ASC-F-23', formatoRev:'9', kpiValor:'', kpiTexto:'del programa', kpiColor:'medio' },
+  { nombre:'Folios de Calidad', icono:'📋', estado:'activo', orden:3,
+    desc:'Registro y seguimiento de folios de no conformidad.', liga:'',
+    proc:'', procRev:'', formato:'', formatoRev:'', kpiValor:'', kpiTexto:'folios abiertos', kpiColor:'mal' },
+  { nombre:'Vidrio y Plástico Quebradizo', icono:'🪟', estado:'obra', orden:4,
+    desc:'Inventario, inspección periódica y control de roturas.', liga:'' },
+  { nombre:'Auditorías de Inocuidad', icono:'🔍', estado:'obra', orden:5,
+    desc:'Programa de auditorías internas, hallazgos y cierre.', liga:'' },
+  { nombre:'Quejas a Proveedor', icono:'📨', estado:'plan', orden:6,
+    desc:'Reclamos a proveedores y seguimiento de su respuesta.', liga:'' },
+  { nombre:'Documentación de Proveedores', icono:'📑', estado:'plan', orden:7,
+    desc:'Fichas técnicas, certificados y vigencias por proveedor.', liga:'' },
+  { nombre:'Control de Plagas', icono:'🐜', estado:'plan', orden:8,
+    desc:'Estaciones, inspecciones y reportes del proveedor de control.', liga:'' },
+  { nombre:'Migración de Metales Pesados', icono:'⚗️', estado:'plan', orden:9,
+    desc:'Estudios de migración y vigencia por material.', liga:'' },
+  { nombre:'Cultura de Calidad', icono:'🎓', estado:'plan', orden:10,
+    desc:'Capacitación, campañas y evaluación del personal.', liga:'' }
+].map((m, i) => Object.assign({ id: 'M' + String(i + 1).padStart(2, '0'), resp: [], verifica: '', frecVer: '' }, m));
+
+function normalizar(c) {
+  const base = cfgSemilla(), out = Object.assign(base, c || {});
+  out.seguridad = Object.assign({}, base.seguridad, (c && c.seguridad) || {});
+  out.vista = Object.assign({}, base.vista, (c && c.vista) || {});
+  out.respaldo = Object.assign({}, base.respaldo, (c && c.respaldo) || {});
+  return out;
+}
+function guardarLocal() {
+  try { localStorage.setItem(LS, JSON.stringify({ CFG, MODULOS, PEND, PRJ, BITACORA, USUARIOS })); } catch (e) {}
+}
+function cargarLocal() {
+  try {
+    const d = JSON.parse(localStorage.getItem(LS) || '{}');
+    CFG = normalizar(d.CFG); MODULOS = d.MODULOS || MODULOS_SEMILLA.slice();
+    PEND = d.PEND || []; PRJ = d.PRJ || []; BITACORA = d.BITACORA || [];
+    USUARIOS = d.USUARIOS || [{ uid:'local', email:'local', nombre:'Usuario local', rol:'admin' }];
+  } catch (e) {
+    CFG = normalizar(null); MODULOS = MODULOS_SEMILLA.slice(); PEND = []; PRJ = []; BITACORA = [];
+    USUARIOS = [{ uid:'local', email:'local', nombre:'Usuario local', rol:'admin' }];
+  }
+}
+
+async function cargarTodo(aviso) {
+  sync('loading', 'Cargando...');
+  if (MODO_LOCAL || !db) { cargarLocal(); sync('err', 'Modo local'); arrancarUI(); if (aviso) toast('Modo local'); return; }
+  try {
+    const c = await db.collection('portal_config').doc('general').get();
+    CFG = normalizar(c.exists ? c.data() : null);
+    if (!c.exists && esAdmin()) await db.collection('portal_config').doc('general').set(CFG);
+
+    const mq = await db.collection('portal_modulos').get();
+    MODULOS = mq.docs.map(d => Object.assign({ id: d.id }, d.data()));
+    if (!MODULOS.length && esAdmin()) {
+      const lote = db.batch();
+      MODULOS_SEMILLA.forEach(m => { const { id, ...r } = m; lote.set(db.collection('portal_modulos').doc(id), r); });
+      await lote.commit();
+      MODULOS = MODULOS_SEMILLA.slice();
+      log('portal', `Cargó los ${MODULOS.length} módulos iniciales`);
+    }
+    const pq = await db.collection('portal_pendientes').orderBy('creado', 'desc').limit(600).get();
+    PEND = pq.docs.map(d => Object.assign({ id: d.id }, d.data()));
+    const jq = await db.collection('portal_proyectos').get();
+    PRJ = jq.docs.map(d => Object.assign({ id: d.id }, d.data()));
+    const uq = await db.collection('usuarios').get();
+    USUARIOS = uq.docs.map(d => Object.assign({ uid: d.id }, d.data()));
+
+    sync('ok', `Conectado · ${MODULOS.length} módulos`);
+    if (aviso) toast('Datos actualizados');
+  } catch (e) {
+    MODO_LOCAL = true; cargarLocal();
+    sync('err', 'Sin conexión — modo local');
+    if (aviso) toast('No se pudo conectar: ' + (e.message || e));
+  }
+  cargarBitacora();
+  arrancarUI();
+}
+async function guardarCfg() { if (MODO_LOCAL || !db) { guardarLocal(); return; } await db.collection('portal_config').doc('general').set(CFG); }
+
+/* ---------- módulos ---------- */
+const modsOrdenados = () => MODULOS.slice().sort((a, b) =>
+  ({ activo:0, obra:1, plan:2 })[a.estado] - ({ activo:0, obra:1, plan:2 })[b.estado]
+  || (a.orden || 99) - (b.orden || 99) || a.nombre.localeCompare(b.nombre));
+const esMio = m => miUid() && (m.resp || []).includes(miUid());
+const EST_TXT = { activo:'Activo', obra:'En construcción', plan:'Planeado' };
+
+function menuLateral() {
+  const mods = modsOrdenados().filter(m => CFG.vista.verPlan || m.estado !== 'plan')
+    .filter(m => !SOLO_MIOS || esMio(m));
+  const mias = PEND.filter(p => !p.hecho && p.resp === miUid()).length;
+  const b = (sec, ic, txt, cnt, amb) =>
+    `<button class="nt ${SECCION === sec ? 'active' : ''}" data-sec="${sec}" onclick="irA('${sec}')">
+      <span class="ic">${ic}</span>${txt}${cnt !== undefined ? `<span class="cnt ${amb ? 'amb' : ''} ${cnt ? '' : 'cero'}">${cnt}</span>` : ''}</button>`;
+  $('#sideNav').innerHTML =
+    b('inicio','🏠','Tareas del día', mias, true) +
+    b('proyectos','📈','Proyectos') +
+    b('direccion','📊','Revisión dirección') +
+    `<div class="grupo-lbl"><span>Módulos</span>
+      <label class="mini-sw" title="Ver solo los módulos a mi cargo">
+        <input type="checkbox" ${SOLO_MIOS ? 'checked' : ''} onchange="SOLO_MIOS=this.checked;renderTodo()"><span>solo los míos</span></label></div>` +
+    b('modulos','🧩','Todos los módulos') +
+    (mods.length ? mods.map(m =>
+      `<button class="nt mod-nt ${m.estado === 'plan' ? 'apagado' : ''} ${MOD_ABIERTO === m.id && SECCION === 'modulo' ? 'active' : ''}"
+        onclick="verModulo('${m.id}')" title="${esc(m.nombre)}">
+        <span class="pt ${m.estado}"></span><span class="ic">${m.icono || '🧩'}</span>${esc(m.nombre)}</button>`).join('')
+      : '<p style="font-size:.76rem;color:var(--tx2);padding:6px 10px">Sin módulos a tu cargo.</p>') +
+    (esAdmin() ? `<button class="nt agregar" onclick="abrirModulo()"><span class="ic">🔒</span>Agregar módulo</button>` : '') +
+    `<div class="side-lbl">Administración</div>` +
+    b('admin','🛡️','Administrador') +
+    b('config','⚙️','Configuración') +
+    b('bitacora','📋','Bitácora');
+}
+function kpiDe(m) {
+  return { valor: m.kpiValor || '', texto: m.kpiTexto || '', color: m.kpiColor || '' };
+}
+
+function tarjetaModulo(m) {
+  const k = kpiDe(m);
+  const resp = (m.resp || []);
+  return `<div class="mod ${m.estado}" onclick="verModulo('${m.id}')">
+    <div class="mod-head"><div class="mod-ic">${m.icono || '🧩'}</div>
+      <div style="min-width:0"><h4>${esc(m.nombre)}</h4>
+        <div class="resp">${resp.length ? resp.map(r => avatar(r)).join('') + `<span style="font-size:.72rem;color:var(--tx2)">${resp.length === 1 ? esc(nombreCorto(usuario(resp[0]))) : resp.length + ' responsables'}</span>`
+          : `<span class="avatar sin">?</span><span style="font-size:.72rem;color:var(--tx2)">Sin asignar</span>`}</div></div></div>
+    <p class="desc">${esc(m.desc)}</p>
+    <div class="pie">
+      <div class="kpi-mini"><b class="${k.color}">${esc(k.valor) || '—'}</b>${esc(k.texto) || (m.estado === 'plan' ? 'sin iniciar' : 'por construir')}</div>
+      <span class="estado e-${m.estado}">${EST_TXT[m.estado]}</span></div>
+  </div>`;
+}
+
+function verModulo(id) {
+  MOD_ABIERTO = id;
+  const m = modulo(id); if (!m) return;
+  SECCION = 'modulo';
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  $('#sec-modulo').classList.add('active');
+  $('#tbTitulo').textContent = m.nombre;
+  $('#tbSub').textContent = EST_TXT[m.estado] + (m.formato ? ' · ' + m.formato + (m.formatoRev ? ' Rev. ' + m.formatoRev : '') : '');
+  const pend = PEND.filter(p => p.modulo === id && !p.hecho);
+  const prj = PRJ.filter(p => p.modulo === id);
+  const fila = (a, b) => `<div style="display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--bd);font-size:.85rem">
+    <span style="color:var(--tx2);font-weight:700;font-size:.72rem;text-transform:uppercase">${a}</span><span style="text-align:right">${b}</span></div>`;
+  $('#fichaMod').innerHTML = `
+    <div class="cfg-grid">
+      <div class="cfg-card">
+        <div style="display:flex;align-items:center;gap:13px;margin-bottom:1rem">
+          <div class="mod-ic" style="width:52px;height:52px;font-size:1.6rem">${m.icono || '🧩'}</div>
+          <div><h4 style="font-size:1.05rem">${esc(m.nombre)}</h4>
+            <span class="estado e-${m.estado}">${EST_TXT[m.estado]}</span></div></div>
+        <p style="font-size:.85rem;color:var(--tx2);line-height:1.6;margin-bottom:1.1rem">${esc(m.desc) || 'Sin descripción.'}</p>
+        ${fila('Responsables', (m.resp || []).length ? (m.resp || []).map(r => `${avatar(r, true)} ${esc(nombreCorto(usuario(r)))}`).join('<br>') : '<i style="color:var(--wn)">sin asignar</i>')}
+        ${fila('Verifica', m.verifica ? `${avatar(m.verifica, true)} ${esc(nombreCorto(usuario(m.verifica)))}` : '<i style="color:var(--wn)">sin definir</i>')}
+        ${fila('Frecuencia de verificación', esc(m.frecVer) || '<i style="color:var(--wn)">sin definir</i>')}
+        ${fila('Procedimiento', m.proc ? esc(m.proc) + (m.procRev ? ' Rev. ' + esc(m.procRev) : '') : '—')}
+        ${fila('Formato / registro', m.formato ? esc(m.formato) + (m.formatoRev ? ' Rev. ' + esc(m.formatoRev) : '') : '—')}
+        <div class="tb" style="margin:1.2rem 0 0">
+          ${m.liga ? `<a href="${esc(m.liga)}" target="_blank" rel="noopener"><button class="btn btn-p">Abrir el tablero ↗</button></a>` : ''}
+          ${esAdmin() ? `<button class="btn btn-s" onclick="abrirModulo('${m.id}')">✏️ Editar módulo</button>` : ''}
+        </div>
+        ${!m.liga && m.estado !== 'activo' ? `<p class="note">Este módulo todavía no tiene tablero. Mientras tanto, su información se lleva fuera del portal.</p>` : ''}
+      </div>
+      <div class="cfg-card">
+        <h4>📌 Pendientes de este módulo</h4>
+        <p class="sub">${pend.length ? pend.length + ' abierto(s)' : 'Sin pendientes abiertos'}</p>
+        ${pend.length ? pend.map(itemPend).join('') : '<p class="empty" style="padding:1.2rem">Nada pendiente 👌</p>'}
+        <h4 style="margin-top:1.4rem">📈 Proyectos relacionados</h4>
+        <p class="sub">${prj.length ? prj.length + ' proyecto(s)' : 'Sin proyectos ligados'}</p>
+        ${prj.length ? prj.map(tarjetaPrj).join('') : ''}
+      </div>
+    </div>`;
+  menuLateral();
+  if (window.innerWidth <= 900) { $('#side').classList.remove('open'); document.body.classList.remove('nav-open'); }
+}
+
+/* ---------- alta y edición de módulos ---------- */
+let modEditando = null, iconoSel = '🧩';
+function abrirModulo(id) {
+  if (!esAdmin()) { toast('Solo un administrador da de alta módulos'); return; }
+  if (!editando()) { pedirDesbloqueo(); return; }
+  modEditando = id || null;
+  const m = id ? modulo(id) : { estado:'plan', resp:[], icono:'🧩' };
+  if (!m) return;
+  $('#moModTit').textContent = id ? '✏️ Editar módulo' : '＋ Agregar módulo';
+  $('#mNombre').value = m.nombre || ''; $('#mDesc').value = m.desc || '';
+  $('#mEstado').value = m.estado || 'plan'; $('#mLiga').value = m.liga || '';
+  $('#mProc').value = m.proc || ''; $('#mProcRev').value = m.procRev || '';
+  $('#mFormato').value = m.formato || ''; $('#mFormatoRev').value = m.formatoRev || '';
+  $('#mKpiValor').value = m.kpiValor || ''; $('#mKpiTexto').value = m.kpiTexto || '';
+  $('#mKpiColor').value = m.kpiColor || ''; $('#mFrecVer').value = m.frecVer || '';
+  iconoSel = m.icono || '🧩';
+  $('#mIconos').innerHTML = ICONOS.map(i => `<button class="ico-op ${i === iconoSel ? 'on' : ''}" onclick="elegirIcono('${i}',this)">${i}</button>`).join('');
+  $('#mResp').innerHTML = USUARIOS.map(u =>
+    `<label><input type="checkbox" value="${u.uid}" ${(m.resp || []).includes(u.uid) ? 'checked' : ''}>${esc(u.nombre || u.email)}</label>`).join('')
+    || '<small class="hint">Todavía no hay usuarios dados de alta.</small>';
+  $('#mVerifica').innerHTML = '<option value="">— sin definir —</option>'
+    + USUARIOS.map(u => `<option value="${u.uid}" ${m.verifica === u.uid ? 'selected' : ''}>${esc(u.nombre || u.email)}</option>`).join('');
+  $('#mBorrar').style.display = id ? '' : 'none';
+  abrir('moMod');
+}
+function elegirIcono(i, el) {
+  iconoSel = i;
+  document.querySelectorAll('#mIconos .ico-op').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+}
+async function guardarModulo() {
+  const nombre = $('#mNombre').value.trim();
+  if (!nombre) { toast('Escribe el nombre del módulo'); return; }
+  const datos = {
+    nombre, desc: $('#mDesc').value.trim(), estado: $('#mEstado').value, icono: iconoSel,
+    resp: [...document.querySelectorAll('#mResp input:checked')].map(c => c.value),
+    verifica: $('#mVerifica').value, frecVer: $('#mFrecVer').value,
+    proc: $('#mProc').value.trim(), procRev: $('#mProcRev').value.trim(),
+    formato: $('#mFormato').value.trim(), formatoRev: $('#mFormatoRev').value.trim(),
+    liga: $('#mLiga').value.trim(), kpiValor: $('#mKpiValor').value.trim(),
+    kpiTexto: $('#mKpiTexto').value.trim(), kpiColor: $('#mKpiColor').value,
+    orden: modEditando ? (modulo(modEditando).orden || 99) : (MODULOS.length + 1)
+  };
+  try {
+    if (modEditando) {
+      if (!MODO_LOCAL && db) await db.collection('portal_modulos').doc(modEditando).update(datos);
+      Object.assign(modulo(modEditando), datos);
+      log('módulo', `Editó el módulo "${nombre}"`);
+    } else {
+      const id = uid('M');
+      if (!MODO_LOCAL && db) await db.collection('portal_modulos').doc(id).set(datos);
+      MODULOS.push(Object.assign({ id }, datos));
+      log('módulo', `Agregó el módulo "${nombre}" (${EST_TXT[datos.estado]})`);
+    }
+    if (MODO_LOCAL || !db) guardarLocal();
+    cerrar('moMod'); renderTodo(); toast('Guardado');
+  } catch (e) { toast('Error: ' + (e.message || e)); }
+}
+async function borrarModulo() {
+  if (!modEditando) return;
+  const m = modulo(modEditando);
+  if (PEND.some(p => p.modulo === modEditando && !p.hecho)) { toast('No se puede: tiene pendientes abiertos'); return; }
+  if (!confirm(`¿Eliminar el módulo "${m.nombre}"? No se puede deshacer.`)) return;
+  try {
+    if (!MODO_LOCAL && db) await db.collection('portal_modulos').doc(modEditando).delete();
+    MODULOS = MODULOS.filter(x => x.id !== modEditando);
+    if (MODO_LOCAL || !db) guardarLocal();
+    log('módulo', `Eliminó el módulo "${m.nombre}"`);
+    cerrar('moMod'); irA('inicio'); toast('Eliminado');
+  } catch (e) { toast('Error: ' + (e.message || e)); }
+}
+async function asignar(modId, uidu, on) {
+  const m = modulo(modId); if (!m) return;
+  m.resp = m.resp || [];
+  m.resp = on ? [...new Set(m.resp.concat(uidu))] : m.resp.filter(x => x !== uidu);
+  try {
+    if (!MODO_LOCAL && db) await db.collection('portal_modulos').doc(modId).update({ resp: m.resp });
+    else guardarLocal();
+    const u = usuario(uidu);
+    log('módulo', `${on ? 'Asignó' : 'Quitó'} a ${u ? (u.nombre || u.email) : uidu} ${on ? 'como responsable de' : 'de'} "${m.nombre}"`);
+    renderTodo();
+  } catch (e) { toast('Error: ' + (e.message || e)); }
+}
+async function cambiarRol(uidu, rol) {
+  if (!esAdmin() || !editando()) { pedirDesbloqueo(); renderTodo(); return; }
+  try {
+    await db.collection('usuarios').doc(uidu).update({ rol });
+    const u = usuario(uidu); if (u) u.rol = rol;
+    log('usuario', `Cambió el perfil de ${u ? u.email : uidu} a ${rol}`);
+    toast('Perfil actualizado');
+  } catch (e) { toast('Error: ' + (e.message || e)); }
+}
+</script>
+<script>
+/* ==========================================================
+   PENDIENTES
+   ========================================================== */
+const PRIO_TXT = { alta:'Alta', media:'Media', baja:'Baja' };
+function venceTxt(p) {
+  if (!p.vence) return '';
+  const d = dias(hoy(), p.vence);
+  if (d < 0) return `<span class="vence tarde">Venció hace ${Math.abs(d)} d</span>`;
+  if (d === 0) return `<span class="vence hoy">Vence hoy</span>`;
+  if (d === 1) return `<span class="vence hoy">Vence mañana</span>`;
+  return `<span class="vence">En ${d} días</span>`;
+}
+function itemPend(p) {
+  const m = modulo(p.modulo);
+  const puedeTocar = puedeCapturar() && (esAdmin() || p.resp === miUid());
+  return `<div class="pend-item ${p.hecho ? 'hecho' : p.prio}">
+    <input type="checkbox" ${p.hecho ? 'checked' : ''} ${puedeTocar ? '' : 'disabled'} onchange="marcarPend('${p.id}',this.checked)">
+    <div class="cuerpo">
+      <h5 class="${p.hecho ? 'tachado' : ''}">${esc(p.texto)}</h5>
+      <div class="meta">
+        ${avatar(p.resp, true)}${esc(nombreCorto(usuario(p.resp)))}
+        ${p.hecho ? '<span class="sb s-ok">Hecho</span>'
+          : `<span class="sb ${p.prio === 'alta' ? 's-venc' : p.prio === 'media' ? 's-warn' : 's-ok'}">${PRIO_TXT[p.prio]}</span>${venceTxt(p)}`}
+        ${m ? `<span>${m.icono || '🧩'} ${esc(m.nombre)}</span>` : ''}
+        ${p.nota ? `<span title="${esc(p.nota)}">📝</span>` : ''}
+      </div>
+    </div>
+    ${puedeCapturar() ? `<button class="btn btn-s btn-sm" onclick="abrirPend('${p.id}')">✏️</button>` : ''}
+  </div>`;
+}
+let pendEditando = null;
+function abrirPend(id) {
+  if (!puedeCapturar()) { toast('Tu perfil no permite asignar pendientes'); return; }
+  pendEditando = id || null;
+  const p = id ? PEND.find(x => x.id === id) : { prio:'media', resp: miUid(), vence: hoy() };
+  if (!p) return;
+  $('#moPendTit').textContent = id ? '✏️ Editar pendiente' : '＋ Asignar pendiente';
+  $('#pTexto').value = p.texto || ''; $('#pNota').value = p.nota || '';
+  $('#pPrio').value = p.prio || 'media'; $('#pVence').value = p.vence || '';
+  $('#pResp').innerHTML = USUARIOS.map(u => `<option value="${u.uid}" ${p.resp === u.uid ? 'selected' : ''}>${esc(u.nombre || u.email)}</option>`).join('');
+  $('#pModulo').innerHTML = '<option value="">— sin módulo —</option>'
+    + modsOrdenados().map(m => `<option value="${m.id}" ${p.modulo === m.id ? 'selected' : ''}>${m.icono} ${esc(m.nombre)}</option>`).join('');
+  $('#pBorrar').style.display = id ? '' : 'none';
+  abrir('moPend');
+}
+async function guardarPend() {
+  const texto = $('#pTexto').value.trim();
+  if (!texto) { toast('Escribe qué hay que hacer'); return; }
+  const v = $('#pVence').value;
+  if (v && !pendEditando && dias(hoy(), v) < 0 && !confirm('La fecha de vencimiento ya pasó. ¿Guardar de todos modos?')) return;
+  const datos = { texto, nota: $('#pNota').value.trim(), prio: $('#pPrio').value,
+    resp: $('#pResp').value, vence: v || null, modulo: $('#pModulo').value || null };
+  try {
+    if (pendEditando) {
+      if (!MODO_LOCAL && db) await db.collection('portal_pendientes').doc(pendEditando).update(datos);
+      Object.assign(PEND.find(x => x.id === pendEditando), datos);
+      log('pendiente', `Editó el pendiente "${texto}"`);
+    } else {
+      datos.hecho = false; datos.creado = new Date().toISOString();
+      datos.asigno = USER ? (USER.displayName || USER.email) : 'local';
+      if (!MODO_LOCAL && db) {
+        const ref = await db.collection('portal_pendientes').add(datos);
+        PEND.unshift(Object.assign({ id: ref.id }, datos));
+      } else PEND.unshift(Object.assign({ id: uid('P') }, datos));
+      const u = usuario(datos.resp);
+      log('pendiente', `Asignó a ${u ? nombreCorto(u) : '—'}: "${texto}"`);
+    }
+    if (MODO_LOCAL || !db) guardarLocal();
+    cerrar('moPend'); renderTodo(); toast('Guardado');
+  } catch (e) { toast('Error: ' + (e.message || e)); }
+}
+async function marcarPend(id, hecho) {
+  const p = PEND.find(x => x.id === id); if (!p) return;
+  p.hecho = hecho; p.hechoFecha = hecho ? new Date().toISOString() : null;
+  try {
+    if (!MODO_LOCAL && db) await db.collection('portal_pendientes').doc(id).update({ hecho, hechoFecha: p.hechoFecha });
+    else guardarLocal();
+    log('pendiente', `${hecho ? 'Completó' : 'Reabrió'} "${p.texto}"`);
+    renderTodo();
+  } catch (e) { toast('Error: ' + (e.message || e)); }
+}
+async function borrarPend() {
+  if (!pendEditando) return;
+  const p = PEND.find(x => x.id === pendEditando); if (!p) return;
+  if (!confirm('¿Eliminar este pendiente?')) return;
+  try {
+    if (!MODO_LOCAL && db) await db.collection('portal_pendientes').doc(pendEditando).delete();
+    PEND = PEND.filter(x => x.id !== pendEditando);
+    if (MODO_LOCAL || !db) guardarLocal();
+    log('pendiente', `Eliminó "${p.texto}"`);
+    cerrar('moPend'); renderTodo(); toast('Eliminado');
+  } catch (e) { toast('Error: ' + (e.message || e)); }
+}
+
+/* ==========================================================
+   PROYECTOS
+   ========================================================== */
+const PRJ_TXT = { curso:'En curso', riesgo:'En riesgo', pausa:'En pausa', listo:'Terminado' };
+const PRJ_CLS = { curso:'s-prog', riesgo:'s-warn', pausa:'s-na', listo:'s-ok' };
+function tarjetaPrj(p) {
+  const m = modulo(p.modulo);
+  const cls = p.estado === 'listo' ? 'listo' : p.estado === 'riesgo' ? 'riesgo' : '';
+  const tarde = p.fecha && p.estado !== 'listo' && dias(hoy(), p.fecha) < 0;
+  return `<div class="prj">
+    <div class="prj-head">
+      <div><h5>${esc(p.nombre)}</h5><div class="desc">${esc(p.desc) || ''}</div></div>
+      <span class="sb ${PRJ_CLS[p.estado]}">${PRJ_TXT[p.estado]}</span></div>
+    <div class="barra"><i class="${cls}" style="width:${Math.min(100, Math.max(0, p.avance || 0))}%"></i></div>
+    <div class="pie">
+      <span>${p.avance || 0}% de avance</span>
+      <span>${avatar(p.resp, true)} ${esc(nombreCorto(usuario(p.resp)))}</span>
+      ${m ? `<span>${m.icono} ${esc(m.nombre)}</span>` : ''}
+      <span style="${tarde ? 'color:var(--dg);font-weight:700' : ''}">${p.fecha ? (tarde ? 'Venció ' : 'Entrega: ') + fx(p.fecha) : 'Sin fecha'}</span>
+      ${puedeCapturar() ? `<button class="btn btn-s btn-sm" onclick="abrirPrj('${p.id}')">✏️</button>` : ''}
+    </div></div>`;
+}
+function renderProyectos() {
+  const e = $('#filPrjEstado').value, r = $('#filPrjResp').value;
+  const l = PRJ.filter(p => !e || p.estado === e).filter(p => !r || p.resp === r)
+    .sort((a, b) => ({ riesgo:0, curso:1, pausa:2, listo:3 })[a.estado] - ({ riesgo:0, curso:1, pausa:2, listo:3 })[b.estado]
+      || (a.fecha || '9999').localeCompare(b.fecha || '9999'));
+  $('#listaPrj').innerHTML = l.length ? l.map(tarjetaPrj).join('') : '<p class="empty">Sin proyectos para este filtro.</p>';
+}
+let prjEditando = null;
+function abrirPrj(id) {
+  if (!puedeCapturar()) { toast('Tu perfil no permite editar proyectos'); return; }
+  prjEditando = id || null;
+  const p = id ? PRJ.find(x => x.id === id) : { estado:'curso', avance:0, resp: miUid() };
+  if (!p) return;
+  $('#moPrjTit').textContent = id ? '✏️ Editar proyecto' : '＋ Nuevo proyecto';
+  $('#jNombre').value = p.nombre || ''; $('#jDesc').value = p.desc || '';
+  $('#jEstado').value = p.estado || 'curso'; $('#jAvance').value = p.avance || 0;
+  $('#jFecha').value = p.fecha || '';
+  $('#jResp').innerHTML = USUARIOS.map(u => `<option value="${u.uid}" ${p.resp === u.uid ? 'selected' : ''}>${esc(u.nombre || u.email)}</option>`).join('');
+  $('#jModulo').innerHTML = '<option value="">— sin módulo —</option>'
+    + modsOrdenados().map(m => `<option value="${m.id}" ${p.modulo === m.id ? 'selected' : ''}>${m.icono} ${esc(m.nombre)}</option>`).join('');
+  $('#jBorrar').style.display = id ? '' : 'none';
+  abrir('moPrj');
+}
+async function guardarPrj() {
+  const nombre = $('#jNombre').value.trim();
+  if (!nombre) { toast('Escribe el nombre del proyecto'); return; }
+  let av = parseInt($('#jAvance').value, 10); if (isNaN(av)) av = 0;
+  av = Math.min(100, Math.max(0, av));
+  const datos = { nombre, desc: $('#jDesc').value.trim(), estado: $('#jEstado').value, avance: av,
+    fecha: $('#jFecha').value || null, resp: $('#jResp').value, modulo: $('#jModulo').value || null };
+  if (datos.estado === 'listo' && av < 100) datos.avance = 100;
+  try {
+    if (prjEditando) {
+      if (!MODO_LOCAL && db) await db.collection('portal_proyectos').doc(prjEditando).update(datos);
+      Object.assign(PRJ.find(x => x.id === prjEditando), datos);
+      log('proyecto', `Actualizó "${nombre}" — ${datos.avance}% (${PRJ_TXT[datos.estado]})`);
+    } else {
+      datos.creado = new Date().toISOString();
+      if (!MODO_LOCAL && db) {
+        const ref = await db.collection('portal_proyectos').add(datos);
+        PRJ.push(Object.assign({ id: ref.id }, datos));
+      } else PRJ.push(Object.assign({ id: uid('J') }, datos));
+      log('proyecto', `Creó el proyecto "${nombre}"`);
+    }
+    if (MODO_LOCAL || !db) guardarLocal();
+    cerrar('moPrj'); renderTodo(); toast('Guardado');
+  } catch (e) { toast('Error: ' + (e.message || e)); }
+}
+async function borrarPrj() {
+  if (!prjEditando) return;
+  const p = PRJ.find(x => x.id === prjEditando); if (!p) return;
+  if (!confirm(`¿Eliminar el proyecto "${p.nombre}"?`)) return;
+  try {
+    if (!MODO_LOCAL && db) await db.collection('portal_proyectos').doc(prjEditando).delete();
+    PRJ = PRJ.filter(x => x.id !== prjEditando);
+    if (MODO_LOCAL || !db) guardarLocal();
+    log('proyecto', `Eliminó "${p.nombre}"`);
+    cerrar('moPrj'); renderTodo(); toast('Eliminado');
+  } catch (e) { toast('Error: ' + (e.message || e)); }
+}
+</script>
+<script>
+/* ==========================================================
+   INICIO, LO MÍO Y ADMINISTRACIÓN
+   ========================================================== */
+let SECCION = 'inicio';
+
+let VISTA = 'mias', FILTRO_DIA = 'pendientes';
+
+function setVista(v) {
+  VISTA = v;
+  $('#swMias').classList.toggle('on', v === 'mias');
+  $('#swEquipo').classList.toggle('on', v === 'equipo');
+  renderInicio();
+}
+function saludoDe() {
+  const h = new Date().getHours();
+  const n = USER ? String(USER.displayName || USER.email).split(/[\s@.]/)[0] : '';
+  const cap = n ? n[0].toUpperCase() + n.slice(1) : '';
+  return (h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches') + (cap ? ', ' + cap : '');
+}
+function tareasVisibles() {
+  let l = PEND.slice();
+  if (VISTA === 'mias') l = l.filter(p => p.resp === miUid());
+  else if (!CFG.vista.pendTodos && !esAdmin()) l = l.filter(p => p.resp === miUid());
+  return l;
+}
+function grupoDe(p) {
+  if (p.hecho) return 'hecho';
+  if (!p.vence) return 'sinfecha';
+  const d = dias(hoy(), p.vence);
+  if (d < 0) return 'vencida';
+  if (d === 0) return 'hoy';
+  if (d <= 7) return 'semana';
+  return 'despues';
+}
+const GRUPOS = [
+  { id:'vencida', t:'Vencidas', urgente:true },
+  { id:'hoy',     t:'Para hoy' },
+  { id:'semana',  t:'Esta semana' },
+  { id:'despues', t:'Más adelante' },
+  { id:'sinfecha',t:'Sin fecha' },
+  { id:'hecho',   t:'Completadas' }
+];
+
+function renderKpisDia(l) {
+  const abiertas = l.filter(p => !p.hecho);
+  const hoyN = abiertas.filter(p => p.vence === hoy()).length;
+  const venc = abiertas.filter(p => p.vence && dias(hoy(), p.vence) < 0).length;
+  const hechasHoy = l.filter(p => p.hecho && (p.hechoFecha || '').slice(0, 10) === hoy()).length;
+  const sem = l.filter(p => p.hecho || (p.vence && dias(hoy(), p.vence) >= -7 && dias(hoy(), p.vence) <= 0)).length;
+  const pct = sem ? Math.round(100 * l.filter(p => p.hecho).length / Math.max(1, l.length)) : 0;
+  $('#kpisDia').innerHTML = `
+    <div class="dc warn"><div class="ic">📌</div><div class="inf"><p>Para hoy</p><h3>${hoyN}</h3></div></div>
+    <div class="dc alert"><div class="ic">⏱</div><div class="inf"><p>Vencidas</p><h3>${venc}</h3></div></div>
+    <div class="dc ok"><div class="ic">✅</div><div class="inf"><p>Completadas hoy</p><h3>${hechasHoy}</h3></div></div>
+    <div class="dc total"><div class="ic">📋</div><div class="inf"><p>Abiertas en total</p><h3>${abiertas.length}</h3></div></div>
+    <div class="dc dmg"><div class="ic">📈</div><div class="inf"><p>Avance general</p><h3>${pct}%</h3></div></div>`;
+}
+
+function tarjetaPersona(u) {
+  const suyas = PEND.filter(p => p.resp === u.uid);
+  const abiertas = suyas.filter(p => !p.hecho);
+  const venc = abiertas.filter(p => p.vence && dias(hoy(), p.vence) < 0).length;
+  const hechas = suyas.filter(p => p.hecho).length;
+  const pct = suyas.length ? Math.round(100 * hechas / suyas.length) : 0;
+  const cls = venc ? 'riesgo' : pct === 100 ? 'listo' : '';
+  const muestra = abiertas.sort((a, b) => (a.vence || '9999').localeCompare(b.vence || '9999')).slice(0, 4);
+  const mods = MODULOS.filter(m => (m.resp || []).includes(u.uid)).length;
+  return `<div class="persona">
+    <div class="ph">${avatar(u.uid)}<div><div class="nm">${esc(u.nombre || u.email)}</div>
+      <div class="rl">${mods} módulo(s) a su cargo</div></div></div>
+    <div class="cifras">
+      <div><b>${abiertas.length}</b>abiertas</div>
+      <div><b class="${venc ? 'mal' : ''}">${venc}</b>vencidas</div>
+      <div><b class="bien">${hechas}</b>completadas</div>
+    </div>
+    <div class="barra"><i class="${cls}" style="width:${pct}%"></i></div>
+    <div class="tareas">
+      ${muestra.length ? muestra.map(p => `<div class="mini"><i class="${p.prio}"></i>
+        <span>${esc(p.texto)}${p.vence && dias(hoy(), p.vence) < 0 ? ' <span style="color:var(--dg);font-weight:700">· vencida</span>' : ''}</span></div>`).join('')
+        : '<div class="mini" style="color:var(--tx2)">Sin tareas abiertas</div>'}
+      ${abiertas.length > 4 ? `<div class="mas" onclick="verDe('${u.uid}')">Ver las ${abiertas.length} →</div>` : ''}
+    </div></div>`;
+}
+function verDe(uidu) {
+  VISTA = 'equipo'; FILTRO_DIA = 'pendientes';
+  $('#buscaDia') && ($('#buscaDia').value = '');
+  _soloDe = uidu; renderInicio();
+  document.querySelector('#tituloTareas').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+let _soloDe = null;
+
+function renderInicio() {
+  $('#saludo').textContent = saludoDe();
+  $('#fechaLarga').textContent = new Date().toLocaleDateString('es-MX',
+    { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  let l = tareasVisibles();
+  renderKpisDia(l);
+
+  /* seguimiento del equipo */
+  const be = $('#bloqueEquipo');
+  if (VISTA === 'equipo') {
+    const gente = USUARIOS.filter(u => PEND.some(p => p.resp === u.uid) || MODULOS.some(m => (m.resp || []).includes(u.uid)));
+    be.innerHTML = `<div class="section-title">Seguimiento del equipo <span class="linea"></span></div>
+      <div class="rejilla-personas">${gente.length ? gente.map(tarjetaPersona).join('')
+        : '<p class="empty">Todavía no hay tareas ni módulos asignados.</p>'}</div>`;
+  } else be.innerHTML = '';
+
+  if (_soloDe) l = l.filter(p => p.resp === _soloDe);
+  const q = ($('#buscaDia') ? $('#buscaDia').value : '').toLowerCase();
+  if (q) l = l.filter(p => (p.texto + ' ' + (p.nota || '')).toLowerCase().includes(q));
+  if (FILTRO_DIA === 'pendientes') l = l.filter(p => !p.hecho);
+  if (FILTRO_DIA === 'hoy') l = l.filter(p => !p.hecho && (!p.vence || dias(hoy(), p.vence) <= 0));
+
+  const u = _soloDe ? usuario(_soloDe) : null;
+  $('#tituloTareas').firstChild.textContent = u ? `Tareas de ${nombreCorto(u)} ` : (VISTA === 'mias' ? 'Mis tareas ' : 'Tareas del equipo ');
+  $('#chipsDia').innerHTML =
+    `<input type="text" id="buscaDia" placeholder="🔍 Buscar" oninput="renderInicio()" value="${esc(q)}"
+       style="padding:5px 11px;border:1px solid var(--bd);border-radius:20px;font-size:.78rem;width:150px">`
+    + [['pendientes','Abiertas'],['hoy','Para hoy'],['todas','Todas']].map(([k, t]) =>
+      `<button class="chip-f ${FILTRO_DIA === k ? 'on' : ''}" onclick="FILTRO_DIA='${k}';renderInicio()">${t}</button>`).join('')
+    + (_soloDe ? `<button class="chip-f" onclick="_soloDe=null;renderInicio()">✕ Quitar filtro</button>` : '')
+    + `<button class="chip-f" onclick="exportarPendientes()">📊 Excel</button>`;
+
+  const n = $('#listaDia');
+  if (!l.length) { n.innerHTML = '<p class="empty">Nada por aquí 👌</p>'; return; }
+  const peso = { alta:0, media:1, baja:2 };
+  n.innerHTML = GRUPOS.map(g => {
+    const items = l.filter(p => grupoDe(p) === g.id)
+      .sort((a, b) => peso[a.prio] - peso[b.prio] || (a.vence || '9999').localeCompare(b.vence || '9999'));
+    if (!items.length) return '';
+    return `<div class="grupo-dia ${g.urgente ? 'urgente' : ''}">
+      <div class="gt">${g.t} <span class="pill">${items.length}</span></div>
+      ${items.map(itemPend).join('')}</div>`;
+  }).join('');
+}
+
+/* ---------- módulos ---------- */
+function renderModulos() {
+  const q = ($('#buscaMod').value || '').toLowerCase();
+  const r = $('#filModResp').value, e = $('#filModEstado').value;
+  const l = modsOrdenados()
+    .filter(m => !e || m.estado === e)
+    .filter(m => !r || (m.resp || []).includes(r))
+    .filter(m => !q || (m.nombre + ' ' + (m.desc || '')).toLowerCase().includes(q));
+  const t = $('#tablaModulos');
+  if (!l.length) { t.innerHTML = '<tbody><tr><td class="empty">Ningún módulo coincide con el filtro.</td></tr></tbody>'; return; }
+  t.innerHTML = `<thead><tr><th>Módulo</th><th>Responsable</th><th>Verifica</th><th>Frecuencia</th>
+      <th>Documento</th><th>Estado</th><th></th></tr></thead><tbody>`
+    + l.map(m => `<tr>
+      <td class="nom"><span class="punto-col p-${m.estado}"></span>${m.icono || '🧩'} ${esc(m.nombre)}</td>
+      <td>${(m.resp || []).length ? (m.resp || []).map(x => avatar(x, true)).join(' ')
+        + ` <span style="font-size:.78rem">${(m.resp || []).length === 1 ? esc(nombreCorto(usuario(m.resp[0]))) : (m.resp || []).length + ' personas'}</span>`
+        : '<span class="avatar sin sm">?</span> <span style="color:var(--tx2);font-size:.78rem">sin asignar</span>'}</td>
+      <td>${m.verifica ? avatar(m.verifica, true) + ' <span style="font-size:.78rem">' + esc(nombreCorto(usuario(m.verifica))) + '</span>'
+        : '<span style="color:var(--tx2);font-size:.78rem">—</span>'}</td>
+      <td style="color:var(--tx2);font-size:.79rem">${esc(m.frecVer) || '—'}</td>
+      <td style="color:var(--tx2);font-size:.79rem">${m.formato ? esc(m.formato) + (m.formatoRev ? ' R' + esc(m.formatoRev) : '') : '—'}</td>
+      <td><span class="estado e-${m.estado}">${EST_TXT[m.estado]}</span></td>
+      <td style="white-space:nowrap">${m.liga ? `<a href="${esc(m.liga)}" target="_blank" rel="noopener"><button class="btn btn-p btn-sm">Abrir ↗</button></a> ` : ''}
+        <button class="btn btn-s btn-sm" onclick="verModulo('${m.id}')">Ficha</button></td>
+    </tr>`).join('') + '</tbody>';
+  const sel = $('#filModResp'), v = sel.value;
+  sel.innerHTML = '<option value="">Todos los responsables</option>'
+    + USUARIOS.map(u => `<option value="${u.uid}">${esc(nombreCorto(u))}</option>`).join('');
+  sel.value = v;
+}
+
+/* ---------- revisión por la dirección ---------- */
+function mesesDisponibles() {
+  const s = new Set([hoy().slice(0, 7)]);
+  PEND.forEach(p => p.vence && s.add(p.vence.slice(0, 7)));
+  PRJ.forEach(p => p.fecha && s.add(p.fecha.slice(0, 7)));
+  return [...s].sort().reverse();
+}
+const MESL = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+function renderDireccion() {
+  const sel = $('#dirPeriodo');
+  if (!sel.options.length) {
+    sel.innerHTML = mesesDisponibles().map(m =>
+      `<option value="${m}">${MESL[+m.slice(5) - 1][0].toUpperCase() + MESL[+m.slice(5) - 1].slice(1)} ${m.slice(0, 4)}</option>`).join('');
+  }
+  const per = sel.value || hoy().slice(0, 7);
+  const delMes = PEND.filter(p => (p.vence || (p.creado || '').slice(0, 10)).slice(0, 7) === per);
+  const hechas = delMes.filter(p => p.hecho).length;
+  const cumpl = delMes.length ? Math.round(100 * hechas / delMes.length) : 0;
+  const venc = delMes.filter(p => !p.hecho && p.vence && dias(hoy(), p.vence) < 0).length;
+  const act = MODULOS.filter(m => m.estado === 'activo').length;
+  const prjCurso = PRJ.filter(p => p.estado === 'curso' || p.estado === 'riesgo');
+  const avg = PRJ.length ? Math.round(PRJ.reduce((s, p) => s + (p.avance || 0), 0) / PRJ.length) : 0;
+  const diasAud = CFG.auditoria ? dias(hoy(), CFG.auditoria) : null;
+  const meta = CFG.meta || 90;
+
+  $('#panelDireccion').innerHTML = `
+    <div class="dir-head">
+      <div style="display:flex;align-items:center;gap:18px">
+        <img src="logo-zubex.png" alt="Zubex" class="marca-b">
+        <div style="border-left:1px solid rgba(255,255,255,.3);padding-left:18px">
+          <h1>${esc(CFG.portal)}</h1><p>${esc(CFG.sistema)} · ${esc(CFG.planta)}</p></div></div>
+      <div class="per">Periodo<b>${sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : per}</b></div>
+    </div>
+    <div class="exec-kpi">
+      <div class="ek"><div class="lbl">Tareas cumplidas</div>
+        <div class="big ${cumpl >= meta ? 'verde' : cumpl >= meta - 15 ? 'ambar' : 'rojo'}">${cumpl}<span style="font-size:1.5rem">%</span></div>
+        <div class="pie">${hechas} de ${delMes.length} del periodo · meta ${meta}%</div></div>
+      <div class="ek"><div class="lbl">Tareas vencidas</div>
+        <div class="big ${venc ? 'rojo' : 'verde'}">${venc}</div>
+        <div class="pie">sin cerrar después de su fecha</div></div>
+      <div class="ek"><div class="lbl">Módulos activos</div>
+        <div class="big azul">${act}<span style="font-size:1.4rem"> / ${MODULOS.length}</span></div>
+        <div class="pie">${MODULOS.filter(m => m.estado === 'obra').length} en construcción</div></div>
+      <div class="ek"><div class="lbl">Próxima auditoría</div>
+        <div class="big ${diasAud != null && diasAud < 60 ? 'ambar' : 'azul'}">${diasAud != null ? diasAud : '—'}</div>
+        <div class="pie">${CFG.auditoria ? 'días · ' + esc(CFG.sqf) + ', ' + fx(CFG.auditoria) : 'sin fecha en Configuración'}</div></div>
+    </div>
+    <div class="dir-row">
+      <div class="card-x"><h3>Avance por persona</h3>
+        <p class="sub">Tareas cerradas contra asignadas en el periodo.</p>
+        ${USUARIOS.filter(u => delMes.some(p => p.resp === u.uid)).map(u => {
+          const s = delMes.filter(p => p.resp === u.uid), h = s.filter(p => p.hecho).length;
+          const pc = s.length ? Math.round(100 * h / s.length) : 0;
+          return `<div class="mini-prj" style="padding:.6rem 0;border-bottom:1px solid var(--bd)">
+            <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:5px">
+              <span>${avatar(u.uid, true)} ${esc(u.nombre || u.email)}</span><span><b>${pc}%</b> · ${h}/${s.length}</span></div>
+            <div class="barra" style="margin:0"><i class="${pc === 100 ? 'listo' : pc < 50 ? 'riesgo' : ''}" style="width:${pc}%"></i></div></div>`;
+        }).join('') || '<p class="empty">Sin tareas en el periodo.</p>'}
+      </div>
+      <div class="card-x"><h3>Proyectos</h3>
+        <p class="sub">${prjCurso.length} en curso · avance promedio ${avg}%</p>
+        ${PRJ.length ? PRJ.slice().sort((a, b) => (b.avance || 0) - (a.avance || 0)).map(p => `
+          <div class="mini-prj" style="padding:.6rem 0;border-bottom:1px solid var(--bd)">
+            <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:5px;gap:10px">
+              <span><b>${esc(p.nombre)}</b> ${p.estado === 'riesgo' ? '<span class="sb s-warn">riesgo</span>' : ''}</span>
+              <span>${p.avance || 0}%</span></div>
+            <div class="barra" style="margin:0"><i class="${p.estado === 'listo' ? 'listo' : p.estado === 'riesgo' ? 'riesgo' : ''}" style="width:${p.avance || 0}%"></i></div></div>`).join('')
+          : '<p class="empty">Sin proyectos registrados.</p>'}
+      </div>
+    </div>
+    <div class="card-x"><h3>Estado de los módulos</h3>
+      <p class="sub">Cada módulo lo sigue quien lo tiene asignado.</p>
+      <div class="mods-exec">${modsOrdenados().map(m => `<div class="me ${m.estado}">
+        <div class="ic">${m.icono || '🧩'}</div><div class="nm">${esc(m.nombre)}</div>
+        <div class="vl">${EST_TXT[m.estado]}</div></div>`).join('')}</div></div>`;
+}
+
+/* ---------- administrador ---------- */
+function subTab(n, b) {
+  document.querySelectorAll('.subsec').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.st').forEach(s => s.classList.remove('active'));
+  $('#sub-' + n).classList.add('active'); b.classList.add('active');
+}
+function renderAdmin() {
+  barraCandado('#lockAdmin');
+  const ed = editando();
+  const t = $('#tablaAsign');
+  t.innerHTML = `<thead><tr><th style="min-width:220px">Módulo</th><th>Estado</th>
+      ${USUARIOS.map(u => `<th title="${esc(u.email)}">${esc(nombreCorto(u))}</th>`).join('')}
+      <th>Verifica</th><th>Documento</th><th></th></tr></thead><tbody>`
+    + modsOrdenados().map(m => `<tr>
+      <td><b>${m.icono || '🧩'} ${esc(m.nombre)}</b></td>
+      <td><span class="estado e-${m.estado}">${EST_TXT[m.estado]}</span></td>
+      ${USUARIOS.map(u => `<td><input type="checkbox" ${(m.resp || []).includes(u.uid) ? 'checked' : ''}
+        ${ed ? '' : 'disabled'} onchange="asignar('${m.id}','${u.uid}',this.checked)"></td>`).join('')}
+      <td>${m.verifica ? avatar(m.verifica, true) : '<span style="color:var(--wn)">—</span>'}</td>
+      <td style="font-size:.78rem;color:var(--tx2)">${m.formato ? esc(m.formato) + (m.formatoRev ? ' R' + esc(m.formatoRev) : '') : '—'}</td>
+      <td><button class="btn btn-s btn-sm" ${ed ? '' : 'disabled'} onclick="abrirModulo('${m.id}')">✏️</button></td>
+    </tr>`).join('') + '</tbody>';
+
+  $('#twUsuarios').innerHTML = USUARIOS.length
+    ? `<table><thead><tr><th>Nombre</th><th>Correo</th><th>Perfil</th><th>Módulos a su cargo</th><th>Verifica</th><th></th></tr></thead><tbody>`
+      + USUARIOS.map(u => {
+        const n = MODULOS.filter(m => (m.resp || []).includes(u.uid)).length;
+        const v = MODULOS.filter(m => m.verifica === u.uid).length;
+        const yo = USER && u.uid === USER.uid;
+        return `<tr><td>${avatar(u.uid)} <b style="margin-left:7px">${esc(u.nombre || '')}</b></td>
+          <td>${esc(u.email)}</td>
+          <td>${ed && !yo ? `<select onchange="cambiarRol('${u.uid}',this.value)" style="width:auto;padding:4px 8px;font-size:.8rem">
+              ${['admin','captura','lectura'].map(r => `<option value="${r}" ${u.rol === r ? 'selected' : ''}>${({admin:'Administrador',captura:'Captura',lectura:'Consulta'})[r]}</option>`).join('')}</select>`
+            : `<span class="rol-chip">${({admin:'Administrador',captura:'Captura',lectura:'Consulta'})[u.rol] || u.rol}</span>`}</td>
+          <td class="num">${n}</td><td class="num">${v}</td>
+          <td style="color:var(--tx2);font-size:.75rem">${yo ? 'tú' : ''}</td></tr>`;
+      }).join('') + '</tbody>'
+    : '<p class="empty">Sin usuarios registrados.</p>';
+
+  const r = CFG.respaldo || {};
+  $('#ultResp').textContent = r.fecha ? fx(r.fecha.slice(0, 10)) : 'Nunca';
+  $('#ultRespQuien').textContent = r.quien ? 'por ' + r.quien : 'Conviene hacer uno este mes';
+}
+
+/* ---------- configuración ---------- */
+function toggleCfg(k, el) {
+  if (!editando()) { pedirDesbloqueo(); return; }
+  el.classList.toggle('on');
+}
+function renderConfig() {
+  barraCandado('#lockConfig');
+  const ed = editando();
+  const v = (id, val) => { const e = $(id); if (e) { e.value = val == null ? '' : val; e.disabled = !ed; } };
+  v('#cfPortal', CFG.portal); v('#cfEmpresa', CFG.empresa); v('#cfPlanta', CFG.planta); v('#cfSistema', CFG.sistema);
+  v('#cfSqf', CFG.sqf); v('#cfClausula', CFG.clausula); v('#cfOtros', CFG.otros); v('#cfAuditoria', CFG.auditoria);
+  v('#cfMeta', CFG.meta); v('#cfAviso', CFG.aviso); v('#cfDesv', CFG.desv); v('#cfMinutos', CFG.seguridad.minutos);
+  $('#lblMin').textContent = CFG.seguridad.minutos;
+  const sw = (id, on) => { const e = $(id); if (e) { e.classList.toggle('on', !!on); e.disabled = !ed; } };
+  sw('#swCandado', CFG.seguridad.candado); sw('#swMotivo', CFG.seguridad.motivo); sw('#swPropios', CFG.seguridad.propios);
+  sw('#swEntraMio', CFG.vista.entraMio); sw('#swPendTodos', CFG.vista.pendTodos); sw('#swVerPlan', CFG.vista.verPlan);
+}
+async function guardarConfig() {
+  if (!editando()) { pedirDesbloqueo(); return; }
+  const antes = { meta: CFG.meta, sqf: CFG.sqf, clausula: CFG.clausula };
+  const nuevo = {
+    portal: $('#cfPortal').value.trim(), empresa: $('#cfEmpresa').value.trim(),
+    planta: $('#cfPlanta').value.trim(), sistema: $('#cfSistema').value.trim(),
+    sqf: $('#cfSqf').value.trim(), clausula: $('#cfClausula').value.trim(),
+    otros: $('#cfOtros').value.trim(), auditoria: $('#cfAuditoria').value,
+    meta: parseInt($('#cfMeta').value, 10) || 90, aviso: parseInt($('#cfAviso').value, 10) || 7,
+    desv: parseInt($('#cfDesv').value, 10) || 14,
+    seguridad: { candado: $('#swCandado').classList.contains('on'),
+      minutos: Math.min(120, Math.max(1, parseInt($('#cfMinutos').value, 10) || 15)),
+      motivo: $('#swMotivo').classList.contains('on'), propios: $('#swPropios').classList.contains('on') },
+    vista: { entraMio: $('#swEntraMio').classList.contains('on'),
+      pendTodos: $('#swPendTodos').classList.contains('on'), verPlan: $('#swVerPlan').classList.contains('on') }
+  };
+  const criterio = antes.meta !== nuevo.meta || antes.sqf !== nuevo.sqf || antes.clausula !== nuevo.clausula;
+  const aplicar = async motivo => {
+    Object.assign(CFG, nuevo);
+    try { await guardarCfg(); } catch (e) { toast('Error: ' + (e.message || e)); return; }
+    const cambios = [];
+    if (antes.meta !== nuevo.meta) cambios.push(`meta de cumplimiento ${antes.meta}% → ${nuevo.meta}%`);
+    if (antes.sqf !== nuevo.sqf) cambios.push(`código SQF "${antes.sqf}" → "${nuevo.sqf}"`);
+    if (antes.clausula !== nuevo.clausula) cambios.push(`cláusula ${antes.clausula} → ${nuevo.clausula}`);
+    log('configuración', cambios.length ? 'Cambió ' + cambios.join('; ') : 'Actualizó la configuración del portal', motivo);
+    renderTodo(); toast('Configuración guardada');
+  };
+  if (criterio) conMotivo('Vas a cambiar un criterio del sistema: ' +
+    [antes.meta !== nuevo.meta ? 'la meta de cumplimiento' : null,
+     antes.sqf !== nuevo.sqf ? 'la edición del código SQF' : null,
+     antes.clausula !== nuevo.clausula ? 'la cláusula de referencia' : null].filter(Boolean).join(', ') + '.', aplicar);
+  else aplicar('');
+}
+</script>
+<script>
+/* ==========================================================
+   EXPORTACIONES, NAVEGACIÓN E INICIO
+   ========================================================== */
+function hojaPendientes() {
+  return PEND.map(p => ({ Pendiente: p.texto, Responsable: (usuario(p.resp) || {}).nombre || '',
+    Prioridad: PRIO_TXT[p.prio] || '', Vence: p.vence || '', Estado: p.hecho ? 'Hecho' : 'Abierto',
+    'Módulo': (modulo(p.modulo) || {}).nombre || '', Detalle: p.nota || '',
+    'Asignó': p.asigno || '', Creado: (p.creado || '').slice(0, 10) }));
+}
+function hojaProyectos() {
+  return PRJ.map(p => ({ Proyecto: p.nombre, Descripción: p.desc || '',
+    Responsable: (usuario(p.resp) || {}).nombre || '', Estado: PRJ_TXT[p.estado] || '',
+    'Avance %': p.avance || 0, 'Fecha compromiso': p.fecha || '',
+    'Módulo': (modulo(p.modulo) || {}).nombre || '' }));
+}
+function hojaModulos() {
+  return modsOrdenados().map(m => ({ 'Módulo': m.nombre, Estado: EST_TXT[m.estado],
+    'Qué cubre': m.desc || '',
+    Responsables: (m.resp || []).map(r => (usuario(r) || {}).nombre || '').join(', '),
+    Verifica: (usuario(m.verifica) || {}).nombre || '', 'Frecuencia de verificación': m.frecVer || '',
+    Procedimiento: m.proc ? m.proc + (m.procRev ? ' Rev. ' + m.procRev : '') : '',
+    Formato: m.formato ? m.formato + (m.formatoRev ? ' Rev. ' + m.formatoRev : '') : '',
+    Indicador: m.kpiValor ? m.kpiValor + ' ' + (m.kpiTexto || '') : '', Liga: m.liga || '' }));
+}
+function hojaBitacora() {
+  return BITACORA.map(b => ({ Fecha: b.fecha, Usuario: b.nombre || b.usuario, Tipo: b.tipo,
+    'Qué pasó': b.detalle, Motivo: b.motivo || '' }));
+}
+function bajar(wb, nombre) { XLSX.writeFile(wb, nombre); }
+function exportarPendientes() {
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hojaPendientes()), 'Pendientes');
+  bajar(wb, `Pendientes-${hoy()}.xlsx`); log('exportación', 'Exportó los pendientes'); toast('Excel generado');
+}
+function exportarProyectos() {
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hojaProyectos()), 'Proyectos');
+  bajar(wb, `Proyectos-${hoy()}.xlsx`); log('exportación', 'Exportó los proyectos'); toast('Excel generado');
+}
+function exportarBitacora() {
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hojaBitacora()), 'Bitácora');
+  bajar(wb, `Bitacora-${hoy()}.xlsx`); toast('Excel generado');
+}
+async function respaldoTotal() {
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hojaModulos()), 'Módulos');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hojaPendientes()), 'Pendientes');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hojaProyectos()), 'Proyectos');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hojaBitacora()), 'Bitácora');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(USUARIOS.map(u =>
+    ({ Nombre: u.nombre, Correo: u.email, Perfil: u.rol }))), 'Usuarios');
+  bajar(wb, `Respaldo-Portal-Calidad-${hoy()}.xlsx`);
+  CFG.respaldo = { fecha: new Date().toISOString(), quien: USER ? (USER.displayName || USER.email) : 'local' };
+  try { await guardarCfg(); } catch (e) {}
+  log('respaldo', 'Descargó el respaldo completo del portal');
+  renderTodo(); toast('Respaldo descargado');
+}
+
+/* ---------- navegación ---------- */
+const TITULOS = {
+  inicio:['Tareas del día', () => 'Lo que hay que sacar hoy y cómo va el equipo'],
+  proyectos:['Proyectos','Avance de los proyectos del portal'],
+  direccion:['Revisión por la dirección','Resumen del periodo para la junta de gerencia'],
+  modulos:['Todos los módulos','Qué hay, quién lo lleva y quién lo verifica'],
+  admin:['Administrador','Módulos, responsables y permisos'],
+  config:['Configuración','Ajustes generales del portal'],
+  bitacora:['Bitácora','Registro de cambios del portal']
+};
+function irA(n) {
+  SECCION = n; MOD_ABIERTO = null;
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  const sec = $('#sec-' + n); if (sec) sec.classList.add('active');
+  const t = TITULOS[n];
+  if (t) { $('#tbTitulo').textContent = t[0]; $('#tbSub').textContent = typeof t[1] === 'function' ? t[1]() : t[1]; }
+  if (window.innerWidth <= 900) { $('#side').classList.remove('open'); document.body.classList.remove('nav-open'); }
+  if (n === 'bitacora') cargarBitacora();
+  renderTodo();
+}
+
+let _r = false;
+function renderTodo() {
+  if (_r) return; _r = true;
+  try {
+    menuLateral();
+    if (SECCION === 'inicio') renderInicio();
+    if (SECCION === 'modulos') renderModulos();
+    if (SECCION === 'direccion') renderDireccion();
+    if (SECCION === 'proyectos') { llenarFiltros(); renderProyectos(); }
+    if (SECCION === 'admin') renderAdmin();
+    if (SECCION === 'config') renderConfig();
+    if (SECCION === 'bitacora') renderBitacora();
+    if (SECCION === 'modulo' && MOD_ABIERTO) verModulo(MOD_ABIERTO);
+  } catch (e) { console.error(e); }
+  _r = false;
+}
+function llenarFiltros() {
+  ['#filPrjResp'].forEach(s => {
+    const e = $(s); if (!e) return;
+    const v = e.value;
+    e.innerHTML = '<option value="">Todos</option>' + USUARIOS.map(u => `<option value="${u.uid}">${esc(nombreCorto(u))}</option>`).join('');
+    if (v) e.value = v;
+  });
+}
+function arrancarUI() {
+  const t = TITULOS[SECCION];
+  if (t) { $('#tbTitulo').textContent = t[0]; $('#tbSub').textContent = typeof t[1] === 'function' ? t[1]() : t[1]; }
+  if (CFG.vista.entraMio && ROL === 'captura') SOLO_MIOS = true;
+  VISTA = esAdmin() ? 'equipo' : 'mias';
+  const sm = $('#swMias'), se = $('#swEquipo');
+  if (sm && se) { sm.classList.toggle('on', VISTA === 'mias'); se.classList.toggle('on', VISTA === 'equipo'); }
+  llenarFiltros(); renderTodo();
+  if (editando()) arrancarTick();
+}
+
+function iniciar() {
+  document.querySelectorAll('.mo').forEach(mo => mo.addEventListener('click', e => { if (e.target === mo) mo.classList.remove('open'); }));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.mo.open').forEach(m => m.classList.remove('open')); });
+
+  if (firebaseConfig.apiKey.indexOf('PEGA_AQUI') === 0) {
+    MODO_LOCAL = true; ROL = 'admin';
+    $('#login').style.display = 'none';
+    USER = { uid:'local', email:'local', displayName:'Usuario local' };
+    sync('err', 'Modo local — falta la llave');
+    cargarTodo(false);
+    toast('Falta pegar la llave de Firebase: el portal corre en modo local');
+    return;
+  }
+  try { firebase.initializeApp(firebaseConfig); auth = firebase.auth(); db = firebase.firestore(); }
+  catch (e) {
+    MODO_LOCAL = true; ROL = 'admin'; $('#login').style.display = 'none';
+    USER = { uid:'local', email:'local', displayName:'Usuario local' };
+    sync('err', 'Sin base — modo local'); cargarTodo(false); return;
+  }
+  auth.onAuthStateChanged(async user => {
+    if (!user) { $('#login').style.display = 'flex'; return; }
+    USER = user;
+    try {
+      const p = await perfilDe(user);
+      ROL = p.rol || 'lectura';
+      pintarUsuario(p);
+      $('#login').style.display = 'none';
+      await cargarTodo(false);
+      log('acceso', 'Entró al portal');
+    } catch (e) {
+      loginErr('Entraste, pero no se pudo leer tu perfil: ' + (e.message || e));
+      $('#login').style.display = 'flex';
+    }
+  });
+}
+document.addEventListener('DOMContentLoaded', iniciar);
+</script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function logueado() { return request.auth != null; }
+    function tengoPerfil() {
+      return logueado() && exists(/databases/$(database)/documents/usuarios/$(request.auth.uid));
+    }
+    function rol() {
+      return tengoPerfil()
+        ? get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol
+        : 'lectura';
+    }
+    function esAdmin() { return rol() == 'admin'; }
+    function puedeCapturar() { return rol() == 'admin' || rol() == 'captura'; }
+
+    // ===== Usuarios =====
+    // El alta la hace cada persona la primera vez que entra.
+    // Cuando todo el equipo esté dado de alta, cambia la línea de 'create'
+    // por la versión endurecida que viene comentada.
+    match /usuarios/{uid} {
+      allow read:   if logueado();
+      allow create: if logueado() && request.auth.uid == uid;
+      // allow create: if logueado() && request.auth.uid == uid
+      //               && request.resource.data.rol == 'lectura';
+      allow update, delete: if esAdmin();
+    }
+
+    // ===== Portal de calidad =====
+    match /portal_config/{doc}     { allow read: if logueado(); allow write: if esAdmin(); }
+    match /portal_modulos/{doc}    { allow read: if logueado(); allow write: if esAdmin(); }
+    match /portal_pendientes/{doc} {
+      allow read: if logueado();
+      allow create, update: if puedeCapturar();
+      allow delete: if esAdmin();
+    }
+    match /portal_proyectos/{doc} {
+      allow read: if logueado();
+      allow create, update: if puedeCapturar();
+      allow delete: if esAdmin();
+    }
+
+    // ===== Módulo de Microbiología =====
+    match /config/{doc}    { allow read: if logueado(); allow write: if esAdmin(); }
+    match /riesgo/{doc}    { allow read: if logueado(); allow write: if esAdmin(); }
+    match /programa/{doc}  { allow read: if logueado(); allow write: if puedeCapturar(); }
+    match /informes/{doc} {
+      allow read: if logueado();
+      allow create, update: if puedeCapturar();
+      allow delete: if esAdmin();
+    }
+    match /archivos/{doc} {
+      allow read: if logueado();
+      allow create, update: if puedeCapturar();
+      allow delete: if esAdmin();
+    }
+
+    // ===== Bitácora: se escribe, nunca se modifica ni se borra =====
+    match /bitacora/{doc} {
+      allow read:   if logueado();
+      allow create: if logueado();
+      allow update, delete: if false;
+    }
+  }
+}
